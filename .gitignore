@@ -35,8 +35,8 @@ node_modules/
 **/node_modules/
 .next/
 **/.next/
-out/
-**/out/
+src/frontend/out/
+src/sdk/dist/
 dist/
 **/dist/
 .tsbuildinfo
