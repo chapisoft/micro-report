@@ -1,0 +1,12 @@
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S report && adduser -S report -G report
+
+COPY src/backend/build/libs/micro-report-backend-1.0.0-SNAPSHOT.jar app.jar
+RUN chown -R report:report /app
+
+USER report:report
+EXPOSE 8080
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # 1. Cơ sở dữ liệu Metadata nội bộ (Lưu mẫu báo cáo, datasource, audit task)
+  report-metadata-db:
+    image: postgres:15-alpine
+    container_name: micro-report-metadata-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: report_meta_db
+      POSTGRES_USER: report_admin
+      POSTGRES_PASSWORD: ${REPORT_DB_PASSWORD:-report_secure_pwd_2026}
+    volumes:
+      - /home/dip/data/report_metadata_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U report_admin -d report_meta_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dip-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # 2. Phân hệ Backend Spring Boot 3 Standalone Engine
+  report-backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    container_name: micro-report-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://report-metadata-db:5432/report_meta_db
+      SPRING_DATASOURCE_USERNAME: report_admin
+      SPRING_DATASOURCE_PASSWORD: ${REPORT_DB_PASSWORD:-report_secure_pwd_2026}
+      REPORT_SECURITY_AES_SECRET_KEY: ${REPORT_AES_KEY:-MascomReportEngineSecureSecretKey2026!#}
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    ports:
+      - "8088:8080"
+    depends_on:
+      report-metadata-db:
+        condition: service_healthy
+    networks:
+      - dip-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  # 3. Phân hệ Frontend Next.js 14 Web App, Standalone Viewer & Embed SDK
+  report-frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    container_name: micro-report-frontend
+    restart: unless-stopped
+    ports:
+      - "3008:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_ENGINE_URL: "https://rpe.microtec.vn"
+    depends_on:
+      - report-backend
+    networks:
+      - dip-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  dip-net:
+    external: true
+    name: dip-network

@@ -1,0 +1,12 @@
+{
+  "name": "micro-report-monorepo",
+  "version": "1.0.0",
+  "description": "Micro-Report — Standalone Pluggable Hybrid Dynamic Report Engine",
+  "private": true,
+  "scripts": {
+    "export:docx": "node scripts/export_docx.js"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^10.9.1"
+  }
+}

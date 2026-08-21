@@ -1,0 +1,69 @@
+# ==============================================================================
+# .gitignore — Micro-Report Engine (Java Spring Boot + Next.js + React SDK)
+# ==============================================================================
+
+# OS & Editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Java / Gradle build artifacts
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.jar
+!src/backend/gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Node.js / Frontend / SDK dependencies & build artifacts
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+**/out/
+dist/
+**/dist/
+.tsbuildinfo
+*.tsbuildinfo
+**/.tsbuildinfo
+
+# Package manager logs & lock cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files & secrets
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files & Export scratchpad
+.tmp_pandoc/
+**/.tmp_pandoc/
+/tmp/
+*.tmp
+*.log
+
+# Test coverage & reports
+coverage/
+**/coverage/
+.nyc_output/

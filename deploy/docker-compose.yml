@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 1. Cơ sở dữ liệu Metadata nội bộ
+  report-metadata-db:
+    image: postgres:15-alpine
+    container_name: micro-report-postgres
+    environment:
+      POSTGRES_DB: report_meta_db
+      POSTGRES_USER: report_admin
+      POSTGRES_PASSWORD: report_secure_pwd_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - report_meta_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U report_admin -d report_meta_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - report-net
+
+  # 2. Phân hệ Backend Spring Boot 3 Engine
+  report-backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    container_name: micro-report-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://report-metadata-db:5432/report_meta_db
+      SPRING_DATASOURCE_USERNAME: report_admin
+      SPRING_DATASOURCE_PASSWORD: report_secure_pwd_2026
+      REPORT_SECURITY_AES_SECRET_KEY: "MascomReportEngineSecureSecretKey2026!#"
+    ports:
+      - "8080:8080"
+    depends_on:
+      report-metadata-db:
+        condition: service_healthy
+    networks:
+      - report-net
+
+  # 3. Phân hệ Frontend Next.js 14 Standalone & Embed
+  report-frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    container_name: micro-report-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_ENGINE_URL: "http://report-backend:8080"
+    depends_on:
+      - report-backend
+    networks:
+      - report-net
+
+volumes:
+  report_meta_data:
+
+networks:
+  report-net:
+    driver: bridge

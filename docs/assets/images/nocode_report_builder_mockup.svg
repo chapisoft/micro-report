@@ -1,0 +1,288 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="100%" height="100%" style="background:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Defs / Styles / Shadows -->
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+
+  <!-- App Header -->
+  <rect x="0" y="0" width="1200" height="60" fill="#0f172a" />
+  <text x="24" y="36" fill="#ffffff" font-size="16" font-weight="bold" letter-spacing="0.5">DIP PLATFORM — CMS QUẢN TRỊ THU HỘ BHXH/BHYT</text>
+  <circle cx="1140" cy="30" r="16" fill="#3b82f6" />
+  <text x="1134" y="35" fill="#ffffff" font-size="12" font-weight="bold">AD</text>
+  <text x="1040" y="35" fill="#94a3b8" font-size="13">Admin VSS</text>
+
+  <!-- Sub Header / Breadcrumb & Action Bar -->
+  <rect x="0" y="60" width="1200" height="64" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+  <text x="24" y="97" fill="#64748b" font-size="13">Báo cáo &gt; Trình tạo báo cáo động (No-Code Builder)</text>
+  
+  <!-- Data Source Selector & Template Name -->
+  <rect x="360" y="74" width="220" height="36" rx="6" fill="#f1f5f9" stroke="#cbd5e1" />
+  <text x="372" y="97" fill="#1e293b" font-size="13" font-weight="500">📁 Hồ sơ &amp; Người tham gia ▾</text>
+  
+  <rect x="590" y="74" width="280" height="36" rx="6" fill="#f8fafc" stroke="#cbd5e1" />
+  <text x="602" y="97" fill="#334155" font-size="13">BC Doanh thu Nghệ An T07/2026</text>
+
+  <!-- Action Buttons -->
+  <rect x="885" y="74" width="95" height="36" rx="6" fill="#e0f2fe" stroke="#38bdf8" />
+  <text x="900" y="97" fill="#0284c7" font-size="13" font-weight="600">▷ Chạy thử</text>
+
+  <rect x="990" y="74" width="95" height="36" rx="6" fill="#3b82f6" />
+  <text x="1010" y="97" fill="#ffffff" font-size="13" font-weight="600">💾 Lưu mẫu</text>
+
+  <rect x="1095" y="74" width="85" height="36" rx="6" fill="#10b981" />
+  <text x="1108" y="97" fill="#ffffff" font-size="13" font-weight="600">📥 Xuất Excel</text>
+
+  <!-- MAIN LAYOUT CONTAINER -->
+  <!-- 1. LEFT PALETTE (Fields List) -->
+  <g transform="translate(24, 140)">
+    <rect x="0" y="0" width="260" height="535" rx="8" fill="#ffffff" stroke="#e2e8f0" filter="url(#shadow)" />
+    <!-- Header -->
+    <rect x="0" y="0" width="260" height="44" rx="8" fill="#f8fafc" stroke="#e2e8f0" />
+    <text x="16" y="27" fill="#0f172a" font-size="14" font-weight="bold">📦 Danh mục trường dữ liệu</text>
+    
+    <!-- Search Bar -->
+    <rect x="14" y="56" width="232" height="32" rx="6" fill="#f1f5f9" stroke="#e2e8f0" />
+    <text x="26" y="77" fill="#94a3b8" font-size="12">🔍 Tìm kiếm trường...</text>
+
+    <!-- Field Items -->
+    <!-- Item 1 -->
+    <g transform="translate(14, 100)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#0284c7" font-size="12">📍</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Tỉnh / Thành phố</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#e0f2fe" />
+      <text x="186" y="21" fill="#0369a1" font-size="10" font-weight="600">TEXT</text>
+    </g>
+
+    <!-- Item 2 -->
+    <g transform="translate(14, 142)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#8b5cf6" font-size="12">🗂️</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Mã thủ tục (D03/D05)</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#ede9fe" />
+      <text x="185" y="21" fill="#6d28d9" font-size="10" font-weight="600">ENUM</text>
+    </g>
+
+    <!-- Item 3 -->
+    <g transform="translate(14, 184)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#10b981" font-size="12">💰</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Tổng số tiền đóng</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#d1fae5" />
+      <text x="190" y="21" fill="#047857" font-size="10" font-weight="600">VND</text>
+    </g>
+
+    <!-- Item 4 -->
+    <g transform="translate(14, 226)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#f59e0b" font-size="12">📅</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Ngày tạo hồ sơ</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#fef3c7" />
+      <text x="188" y="21" fill="#b45309" font-size="10" font-weight="600">DATE</text>
+    </g>
+
+    <!-- Item 5 -->
+    <g transform="translate(14, 268)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#64748b" font-size="12">👤</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Họ tên người nộp</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#e0f2fe" />
+      <text x="186" y="21" fill="#0369a1" font-size="10" font-weight="600">TEXT</text>
+    </g>
+
+    <!-- Item 6 -->
+    <g transform="translate(14, 310)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#ef4444" font-size="12">🔒</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Số CCCD / Định danh</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#fee2e2" />
+      <text x="185" y="21" fill="#b91c1c" font-size="10" font-weight="600">MASK</text>
+    </g>
+
+    <!-- Item 7 -->
+    <g transform="translate(14, 352)">
+      <rect width="232" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" filter="url(#cardShadow)" />
+      <text x="10" y="22" fill="#64748b" font-size="12">⠿</text>
+      <text x="26" y="22" fill="#06b6d4" font-size="12">🏥</text>
+      <text x="46" y="22" fill="#1e293b" font-size="12" font-weight="500">Nơi đăng ký KCB</text>
+      <rect x="180" y="8" width="44" height="18" rx="4" fill="#e0f2fe" />
+      <text x="186" y="21" fill="#0369a1" font-size="10" font-weight="600">TEXT</text>
+    </g>
+  </g>
+
+  <!-- 2. CANVAS WORKSPACE (Center/Right) -->
+  <!-- 2.1. ZONE CỘT HIỂN THỊ -->
+  <g transform="translate(304, 140)">
+    <rect x="0" y="0" width="872" height="96" rx="8" fill="#ffffff" stroke="#e2e8f0" filter="url(#shadow)" />
+    <text x="16" y="24" fill="#0f172a" font-size="13" font-weight="bold">1. CỘT HIỂN THỊ (Drag &amp; Drop sắp xếp vị trí &amp; chọn hàm tính toán)</text>
+    
+    <!-- Chip 1: Tỉnh thành -->
+    <g transform="translate(16, 40)">
+      <rect width="130" height="36" rx="6" fill="#f1f5f9" stroke="#94a3b8" />
+      <text x="10" y="23" fill="#475569" font-size="12">⠿ Tỉnh/Thành</text>
+      <text x="110" y="23" fill="#ef4444" font-size="12" font-weight="bold">✕</text>
+    </g>
+
+    <!-- Chip 2: Mã thủ tục -->
+    <g transform="translate(156, 40)">
+      <rect width="130" height="36" rx="6" fill="#f1f5f9" stroke="#94a3b8" />
+      <text x="10" y="23" fill="#475569" font-size="12">⠿ Mã Thủ Tục</text>
+      <text x="110" y="23" fill="#ef4444" font-size="12" font-weight="bold">✕</text>
+    </g>
+
+    <!-- Chip 3: Số lượng (COUNT) -->
+    <g transform="translate(296, 40)">
+      <rect width="165" height="36" rx="6" fill="#eff6ff" stroke="#3b82f6" />
+      <text x="10" y="23" fill="#1d4ed8" font-size="12" font-weight="500">⠿ Số lượng (COUNT)</text>
+      <text x="145" y="23" fill="#ef4444" font-size="12" font-weight="bold">✕</text>
+    </g>
+
+    <!-- Chip 4: Doanh thu (SUM) -->
+    <g transform="translate(471, 40)">
+      <rect width="165" height="36" rx="6" fill="#ecfdf5" stroke="#10b981" />
+      <text x="10" y="23" fill="#047857" font-size="12" font-weight="500">⠿ Doanh thu (SUM)</text>
+      <text x="145" y="23" fill="#ef4444" font-size="12" font-weight="bold">✕</text>
+    </g>
+
+    <!-- Dropzone placeholder -->
+    <g transform="translate(646, 40)">
+      <rect width="210" height="36" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4" />
+      <text x="24" y="23" fill="#94a3b8" font-size="12">+ Kéo thả thêm cột vào đây</text>
+    </g>
+  </g>
+
+  <!-- 2.2. ZONE BỘ LỌC ĐIỀU KIỆN & GOM NHÓM -->
+  <g transform="translate(304, 250)">
+    <!-- Box Filters -->
+    <rect x="0" y="0" width="530" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" filter="url(#shadow)" />
+    <text x="16" y="24" fill="#0f172a" font-size="13" font-weight="bold">2. BỘ LỌC ĐIỀU KIỆN (Visual Filter Builder)</text>
+    
+    <!-- Row 1: Ngày tạo BETWEEN -->
+    <g transform="translate(16, 38)">
+      <rect width="100" height="30" rx="4" fill="#f1f5f9" stroke="#cbd5e1" />
+      <text x="10" y="20" fill="#334155" font-size="12">Ngày tạo</text>
+      
+      <rect x="108" y="0" width="100" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1" />
+      <text x="116" y="20" fill="#0284c7" font-size="11" font-weight="600">BETWEEN ▾</text>
+
+      <rect x="216" y="0" width="160" height="30" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+      <text x="224" y="20" fill="#1e293b" font-size="11">01/07/2026 - 31/07/2026</text>
+
+      <text x="385" y="21" fill="#94a3b8" font-size="13">✕</text>
+    </g>
+
+    <!-- Row 2: Trạng thái = COMPLETED -->
+    <g transform="translate(16, 76)">
+      <rect width="100" height="30" rx="4" fill="#f1f5f9" stroke="#cbd5e1" />
+      <text x="10" y="20" fill="#334155" font-size="12">Trạng thái</text>
+      
+      <rect x="108" y="0" width="100" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1" />
+      <text x="116" y="20" fill="#0284c7" font-size="11" font-weight="600">EQUALS (=) ▾</text>
+
+      <rect x="216" y="0" width="160" height="30" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+      <text x="224" y="20" fill="#1e293b" font-size="11">COMPLETED (Đã duyệt)</text>
+
+      <text x="385" y="21" fill="#94a3b8" font-size="13">✕</text>
+      
+      <text x="415" y="20" fill="#3b82f6" font-size="11" font-weight="600">+ Thêm lọc</text>
+    </g>
+
+    <!-- Box Group By -->
+    <rect x="546" y="0" width="326" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" filter="url(#shadow)" />
+    <text x="562" y="24" fill="#0f172a" font-size="13" font-weight="bold">3. GOM NHÓM (Group By)</text>
+
+    <g transform="translate(562, 42)">
+      <rect width="115" height="32" rx="6" fill="#f1f5f9" stroke="#94a3b8" />
+      <text x="10" y="21" fill="#475569" font-size="12">⠿ Tỉnh/Thành</text>
+      <text x="96" y="21" fill="#ef4444" font-size="12">✕</text>
+    </g>
+
+    <g transform="translate(685, 42)">
+      <rect width="115" height="32" rx="6" fill="#f1f5f9" stroke="#94a3b8" />
+      <text x="10" y="21" fill="#475569" font-size="12">⠿ Mã Thủ Tục</text>
+      <text x="96" y="21" fill="#ef4444" font-size="12">✕</text>
+    </g>
+
+    <text x="562" y="100" fill="#64748b" font-size="11">ℹ Đang kích hoạt tính toán tổng hợp (Aggregate)</text>
+  </g>
+
+  <!-- 2.3. ZONE BẢNG XEM TRƯỚC DỮ LIỆU THỜI GIAN THỰC (LIVE PREVIEW) -->
+  <g transform="translate(304, 384)">
+    <rect x="0" y="0" width="872" height="290" rx="8" fill="#ffffff" stroke="#e2e8f0" filter="url(#shadow)" />
+    
+    <!-- Table Header Bar -->
+    <rect x="0" y="0" width="872" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" />
+    <text x="16" y="24" fill="#0f172a" font-size="13" font-weight="bold">📊 XEM TRƯỚC KẾT QUẢ TRUY VẤN (Live Preview - 50 bản ghi mẫu từ PostgreSQL DWH)</text>
+    <circle cx="844" cy="19" r="4" fill="#10b981" />
+    <text x="750" y="23" fill="#10b981" font-size="11" font-weight="600">Đã đồng bộ DWH</text>
+
+    <!-- Table Columns -->
+    <g transform="translate(16, 48)">
+      <rect width="840" height="32" fill="#f1f5f9" />
+      <text x="16" y="21" fill="#475569" font-size="12" font-weight="bold">STT</text>
+      <text x="70" y="21" fill="#475569" font-size="12" font-weight="bold">Tỉnh / Thành phố</text>
+      <text x="260" y="21" fill="#475569" font-size="12" font-weight="bold">Mã Thủ Tục</text>
+      <text x="440" y="21" fill="#475569" font-size="12" font-weight="bold">Số Lượng Hồ Sơ (COUNT)</text>
+      <text x="660" y="21" fill="#475569" font-size="12" font-weight="bold">Tổng Doanh Thu (VNĐ - SUM)</text>
+    </g>
+
+    <!-- Table Row 1 -->
+    <g transform="translate(16, 82)">
+      <rect width="840" height="36" fill="#ffffff" stroke="#f1f5f9" />
+      <text x="16" y="23" fill="#64748b" font-size="12">1</text>
+      <text x="70" y="23" fill="#1e293b" font-size="12" font-weight="500">Nghệ An</text>
+      <text x="260" y="23" fill="#1e293b" font-size="12">D03-TS (BHXH Tự nguyện)</text>
+      <text x="440" y="23" fill="#0284c7" font-size="12" font-weight="600">1,245</text>
+      <text x="660" y="23" fill="#047857" font-size="12" font-weight="bold">1.867.500.000 đ</text>
+    </g>
+
+    <!-- Table Row 2 -->
+    <g transform="translate(16, 120)">
+      <rect width="840" height="36" fill="#f8fafc" stroke="#f1f5f9" />
+      <text x="16" y="23" fill="#64748b" font-size="12">2</text>
+      <text x="70" y="23" fill="#1e293b" font-size="12" font-weight="500">Nghệ An</text>
+      <text x="260" y="23" fill="#1e293b" font-size="12">D05-TS (BHYT Hộ gia đình)</text>
+      <text x="440" y="23" fill="#0284c7" font-size="12" font-weight="600">520</text>
+      <text x="660" y="23" fill="#047857" font-size="12" font-weight="bold">780.000.000 đ</text>
+    </g>
+
+    <!-- Table Row 3 -->
+    <g transform="translate(16, 158)">
+      <rect width="840" height="36" fill="#ffffff" stroke="#f1f5f9" />
+      <text x="16" y="23" fill="#64748b" font-size="12">3</text>
+      <text x="70" y="23" fill="#1e293b" font-size="12" font-weight="500">Hà Tĩnh</text>
+      <text x="260" y="23" fill="#1e293b" font-size="12">D03-TS (BHXH Tự nguyện)</text>
+      <text x="440" y="23" fill="#0284c7" font-size="12" font-weight="600">890</text>
+      <text x="660" y="23" fill="#047857" font-size="12" font-weight="bold">1.335.000.000 đ</text>
+    </g>
+
+    <!-- Table Row 4 -->
+    <g transform="translate(16, 196)">
+      <rect width="840" height="36" fill="#f8fafc" stroke="#f1f5f9" />
+      <text x="16" y="23" fill="#64748b" font-size="12">4</text>
+      <text x="70" y="23" fill="#1e293b" font-size="12" font-weight="500">Hà Tĩnh</text>
+      <text x="260" y="23" fill="#1e293b" font-size="12">D05-TS (BHYT Hộ gia đình)</text>
+      <text x="440" y="23" fill="#0284c7" font-size="12" font-weight="600">310</text>
+      <text x="660" y="23" fill="#047857" font-size="12" font-weight="bold">465.000.000 đ</text>
+    </g>
+
+    <!-- Summary Row -->
+    <g transform="translate(16, 234)">
+      <rect width="840" height="36" fill="#eff6ff" stroke="#bfdbfe" />
+      <text x="70" y="23" fill="#1e3a8a" font-size="12" font-weight="bold">TỔNG CỘNG TOÀN BÁO CÁO</text>
+      <text x="440" y="23" fill="#1e3a8a" font-size="12" font-weight="bold">2,965 hồ sơ</text>
+      <text x="660" y="23" fill="#1e3a8a" font-size="12" font-weight="bold">4.447.500.000 đ</text>
+    </g>
+  </g>
+</svg>

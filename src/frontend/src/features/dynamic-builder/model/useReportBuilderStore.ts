@@ -1,0 +1,439 @@
+import { create } from "zustand";
+import { defaultApiClient, ReportBuilderApiClient } from "../api/reportBuilderApi";
+import {
+  AggregationType,
+  BUILDER_CONSTANTS,
+  DataSource,
+  FilterCondition,
+  JoinRelation,
+  QueryMode,
+  QueryPreviewResponse,
+  ReportTemplate,
+  SchemaInfo,
+  SelectedColumn,
+  TableInfo,
+  TemplateStatus,
+  ThemeMode,
+  VisualGuiConfig,
+} from "./types";
+
+const initialGuiConfig: VisualGuiConfig = {
+  primaryTable: "",
+  columns: [],
+  joins: [],
+  filters: [],
+  groupBy: [],
+  orderBy: [],
+  limit: BUILDER_CONSTANTS.DEFAULT_PREVIEW_LIMIT,
+};
+
+interface ReportBuilderState {
+  engineUrl: string;
+  tenantId: string;
+  authToken?: string;
+  apiKey?: string;
+  theme: "light" | "dark";
+  apiClient: ReportBuilderApiClient;
+
+  mode: QueryMode;
+  datasources: DataSource[];
+  activeDatasourceCode: string;
+  schemaInfo: SchemaInfo | null;
+  selectedTable: TableInfo | null;
+
+  guiConfig: VisualGuiConfig;
+  sqlQuery: string;
+  queryParameters: Record<string, any>;
+  transformJs: string;
+
+  previewData: QueryPreviewResponse | null;
+  isLoadingSchema: boolean;
+  isLoadingPreview: boolean;
+  isExporting: boolean;
+  errorMessage: string | null;
+
+  activeTemplate: ReportTemplate | null;
+
+  // Actions
+  initSession: (params: {
+    engineUrl?: string;
+    tenantId?: string;
+    authToken?: string;
+    apiKey?: string;
+    theme?: "light" | "dark";
+    defaultDatasourceCode?: string;
+    allowedDatasources?: string[] | string;
+    listDatasource?: string[] | string;
+  }) => Promise<void>;
+  setTheme: (theme: "light" | "dark") => void;
+  setMode: (mode: QueryMode) => void;
+  setActiveDatasource: (code: string) => Promise<void>;
+  setSelectedTable: (table: TableInfo | null) => void;
+  setSqlQuery: (sql: string) => void;
+  setQueryParameter: (key: string, value: any) => void;
+  setTransformJs: (js: string) => void;
+  clearPreview: () => void;
+
+  // Visual GUI Actions
+  setPrimaryTable: (tableName: string) => void;
+  toggleColumnSelection: (tableName: string, columnName: string) => void;
+  updateColumnAlias: (id: string, alias: string) => void;
+  updateColumnAggregation: (
+    id: string,
+    aggregation: SelectedColumn["aggregation"]
+  ) => void;
+  removeColumn: (id: string) => void;
+  addJoinRelation: (join: JoinRelation) => void;
+  removeJoinRelation: (id: string) => void;
+  addFilterCondition: (filter: FilterCondition) => void;
+  removeFilterCondition: (filterId: string) => void;
+
+  // Execution & Converters
+  convertGuiToSql: () => string;
+  runPreview: () => Promise<void>;
+  saveCurrentTemplate: (name: string, code: string) => Promise<ReportTemplate>;
+  loadTemplate: (template: ReportTemplate) => void;
+}
+
+export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
+  engineUrl: "",
+  tenantId: BUILDER_CONSTANTS.DEFAULT_TENANT_ID,
+  theme: ThemeMode.LIGHT,
+  apiClient: defaultApiClient,
+
+  mode: QueryMode.GUI,
+  datasources: [],
+  activeDatasourceCode: "",
+  schemaInfo: null,
+  selectedTable: null,
+
+  guiConfig: initialGuiConfig,
+  sqlQuery: "SELECT 1 AS status",
+  queryParameters: {},
+  transformJs: "// function transform(rows) { return rows; }",
+
+  previewData: null,
+  isLoadingSchema: false,
+  isLoadingPreview: false,
+  isExporting: false,
+  errorMessage: null,
+
+  activeTemplate: null,
+
+  initSession: async ({
+    engineUrl = "",
+    tenantId = BUILDER_CONSTANTS.DEFAULT_TENANT_ID,
+    authToken,
+    apiKey,
+    theme = ThemeMode.LIGHT,
+    defaultDatasourceCode,
+    allowedDatasources,
+    listDatasource,
+  }) => {
+    const client = new ReportBuilderApiClient(
+      engineUrl,
+      tenantId,
+      authToken,
+      apiKey
+    );
+    set({ engineUrl, tenantId, authToken, apiKey, theme, apiClient: client });
+
+    try {
+      const filterDs = allowedDatasources || listDatasource;
+      const dsList = await client.getDataSources(filterDs);
+      set({ datasources: dsList });
+
+      const targetDsCode =
+        defaultDatasourceCode ||
+        (dsList.length > 0 ? dsList[0].datasourceCode : "");
+      if (targetDsCode) {
+        await get().setActiveDatasource(targetDsCode);
+      }
+    } catch (err: any) {
+      set({
+        errorMessage: "Không thể kết nối đến Report Engine: " + err.message,
+      });
+    }
+  },
+
+  setTheme: (theme) => set({ theme }),
+  setMode: (mode) => set({ mode }),
+
+  setActiveDatasource: async (code: string) => {
+    set({
+      activeDatasourceCode: code,
+      isLoadingSchema: true,
+      errorMessage: null,
+    });
+    try {
+      const schema = await get().apiClient.getSchema(code);
+      set({
+        schemaInfo: schema,
+        isLoadingSchema: false,
+        selectedTable: schema.tables.length > 0 ? schema.tables[0] : null,
+      });
+      if (schema.tables.length > 0 && !get().guiConfig.primaryTable) {
+        get().setPrimaryTable(schema.tables[0].tableName);
+      }
+    } catch (err: any) {
+      set({
+        schemaInfo: null,
+        isLoadingSchema: false,
+        errorMessage: "Lỗi tải Schema: " + err.message,
+      });
+    }
+  },
+
+  setSelectedTable: (table) => set({ selectedTable: table }),
+  setSqlQuery: (sqlQuery) => set({ sqlQuery }),
+  setQueryParameter: (key, value) =>
+    set((state) => ({
+      queryParameters: { ...state.queryParameters, [key]: value },
+    })),
+  setTransformJs: (transformJs) => set({ transformJs }),
+  clearPreview: () => set({ previewData: null }),
+
+  setPrimaryTable: (tableName) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        primaryTable: tableName,
+        columns: [],
+      },
+    }));
+  },
+
+  toggleColumnSelection: (tableName, columnName) => {
+    set((state) => {
+      const exists = state.guiConfig.columns.find(
+        (c) => c.tableName === tableName && c.columnName === columnName
+      );
+      if (exists) {
+        return {
+          guiConfig: {
+            ...state.guiConfig,
+            columns: state.guiConfig.columns.filter((c) => c.id !== exists.id),
+          },
+        };
+      } else {
+        const newCol: SelectedColumn = {
+          id: `${tableName}_${columnName}_${Date.now()}`,
+          tableName,
+          columnName,
+          aggregation: AggregationType.NONE,
+        };
+        return {
+          guiConfig: {
+            ...state.guiConfig,
+            columns: [...state.guiConfig.columns, newCol],
+          },
+        };
+      }
+    });
+  },
+
+  updateColumnAlias: (id, alias) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        columns: state.guiConfig.columns.map((c) =>
+          c.id === id ? { ...c, alias } : c
+        ),
+      },
+    }));
+  },
+
+  updateColumnAggregation: (id, aggregation) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        columns: state.guiConfig.columns.map((c) =>
+          c.id === id ? { ...c, aggregation } : c
+        ),
+      },
+    }));
+  },
+
+  removeColumn: (id) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        columns: state.guiConfig.columns.filter((c) => c.id !== id),
+      },
+    }));
+  },
+
+  addJoinRelation: (join) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        joins: [...state.guiConfig.joins, join],
+      },
+    }));
+  },
+
+  removeJoinRelation: (id) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        joins: state.guiConfig.joins.filter((j) => j.id !== id),
+      },
+    }));
+  },
+
+  addFilterCondition: (filter) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        filters: [...state.guiConfig.filters, filter],
+      },
+    }));
+  },
+
+  removeFilterCondition: (filterId: string) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        filters: state.guiConfig.filters.filter((f) => f.id !== filterId),
+      },
+    }));
+  },
+
+  convertGuiToSql: () => {
+    const { guiConfig } = get();
+    if (!guiConfig.primaryTable) {
+      return "SELECT 'Vui lòng chọn bảng gốc (Primary Table)' AS notice";
+    }
+
+    let selectExprs = "*";
+    if (guiConfig.columns.length > 0) {
+      selectExprs = guiConfig.columns
+        .map((col) => {
+          const colFull = `${col.tableName}.${col.columnName}`;
+          let expr = colFull;
+          if (col.aggregation && col.aggregation !== AggregationType.NONE) {
+            expr = `${col.aggregation}(${colFull})`;
+          }
+          if (col.alias && col.alias !== col.columnName) {
+            expr += ` AS ${col.alias}`;
+          }
+          return expr;
+        })
+        .join(", ");
+    }
+
+    let sql = `SELECT ${selectExprs}\nFROM ${guiConfig.primaryTable}`;
+
+    if (guiConfig.joins && guiConfig.joins.length > 0) {
+      guiConfig.joins.forEach((j) => {
+        sql += `\n${j.joinType || "INNER"} JOIN ${j.targetTable} ON ${j.sourceTable}.${j.sourceColumn} = ${j.targetTable}.${j.targetColumn}`;
+      });
+    }
+
+    if (guiConfig.filters && guiConfig.filters.length > 0) {
+      const whereClauses = guiConfig.filters.map((f, idx) => {
+        const val =
+          f.operator === "IS NULL" || f.operator === "IS NOT NULL"
+            ? ""
+            : f.value.startsWith("{{")
+            ? f.value
+            : `'${f.value}'`;
+        const clause = `${f.tableName}.${f.columnName} ${f.operator} ${val}`.trim();
+        return idx === 0 ? clause : `${f.logic} ${clause}`;
+      });
+      sql += `\nWHERE ${whereClauses.join(" ")}`;
+    }
+
+    const hasAgg = guiConfig.columns.some(
+      (c) => c.aggregation && c.aggregation !== AggregationType.NONE
+    );
+    const nonAggCols = guiConfig.columns.filter(
+      (c) => !c.aggregation || c.aggregation === AggregationType.NONE
+    );
+    if (hasAgg && nonAggCols.length > 0) {
+      const groupExprs = nonAggCols.map((c) => `${c.tableName}.${c.columnName}`);
+      sql += `\nGROUP BY ${groupExprs.join(", ")}`;
+    }
+
+    sql += `\nLIMIT ${guiConfig.limit || 50}`;
+
+    set({ sqlQuery: sql });
+    return sql;
+  },
+
+  runPreview: async () => {
+    const state = get();
+    set({ isLoadingPreview: true, errorMessage: null });
+
+    let querySql = state.sqlQuery;
+    let configJson = "";
+
+    if (state.mode === QueryMode.GUI) {
+      querySql = state.convertGuiToSql();
+      configJson = JSON.stringify(state.guiConfig);
+    }
+
+    try {
+      const res = await state.apiClient.previewQuery({
+        datasourceCode: state.activeDatasourceCode,
+        mode: state.mode,
+        sql: querySql,
+        configJson,
+        params: state.queryParameters,
+        limit: 50,
+      });
+      set({ previewData: res, isLoadingPreview: false });
+    } catch (err: any) {
+      set({
+        previewData: null,
+        isLoadingPreview: false,
+        errorMessage:
+          err.response?.data?.message || err.message || "Lỗi thực thi truy vấn",
+      });
+    }
+  },
+
+  saveCurrentTemplate: async (templateName: string, templateCode: string) => {
+    const state = get();
+    const isGui = state.mode === QueryMode.GUI;
+    const configJson = isGui
+      ? JSON.stringify(state.guiConfig)
+      : state.sqlQuery;
+
+    const tpl: ReportTemplate = {
+      id: state.activeTemplate?.id,
+      templateCode,
+      templateName,
+      datasourceCode: state.activeDatasourceCode,
+      mode: state.mode,
+      status: TemplateStatus.ACTIVE,
+      configJson,
+      transformJs: state.transformJs,
+    };
+
+    const saved = await state.apiClient.saveTemplate(tpl);
+    set({ activeTemplate: saved });
+    return saved;
+  },
+
+  loadTemplate: (template: ReportTemplate) => {
+    set({
+      activeTemplate: template,
+      activeDatasourceCode: template.datasourceCode,
+      mode: template.mode,
+      transformJs: template.transformJs || "",
+      errorMessage: null,
+    });
+
+    if (template.mode === QueryMode.GUI) {
+      try {
+        const parsed = JSON.parse(template.configJson);
+        set({ guiConfig: parsed });
+      } catch (e) {
+        console.error("Lỗi parse configJson", e);
+      }
+    } else {
+      set({ sqlQuery: template.configJson });
+    }
+  },
+}));
