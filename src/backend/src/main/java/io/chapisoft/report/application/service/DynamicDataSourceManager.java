@@ -3,6 +3,7 @@ package io.chapisoft.report.application.service;
 import io.chapisoft.report.adapter.out.persistence.DataSourceRepository;
 import io.chapisoft.report.domain.exception.ResourceNotFoundException;
 import io.chapisoft.report.domain.model.DataSourceConfig;
+import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.security.AesEncryptionService;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -53,10 +54,10 @@ public class DynamicDataSourceManager {
         hikariConfig.setJdbcUrl(config.getJdbcUrl());
         hikariConfig.setUsername(config.getUsername());
         hikariConfig.setPassword(aesEncryptionService.decrypt(config.getPasswordEncrypted()));
-        hikariConfig.setMaximumPoolSize(config.getMaxPoolSize() != null ? config.getMaxPoolSize() : 5);
-        hikariConfig.setMinimumIdle(1);
-        hikariConfig.setConnectionTimeout(10000); // 10s
-        hikariConfig.setValidationTimeout(3000);
+        hikariConfig.setMaximumPoolSize(config.getMaxPoolSize() != null ? config.getMaxPoolSize() : ReportConstants.DEFAULT_HIKARI_MAX_POOL_SIZE_FALLBACK);
+        hikariConfig.setMinimumIdle(ReportConstants.DEFAULT_HIKARI_MIN_IDLE);
+        hikariConfig.setConnectionTimeout(ReportConstants.DEFAULT_HIKARI_CONNECTION_TIMEOUT_MS);
+        hikariConfig.setValidationTimeout(ReportConstants.DEFAULT_HIKARI_VALIDATION_TIMEOUT_MS);
         hikariConfig.setConnectionTestQuery(config.getDbType().getValidationQuery());
         hikariConfig.setReadOnly(config.getIsReadOnly() != null ? config.getIsReadOnly() : true);
         hikariConfig.setAutoCommit(true);

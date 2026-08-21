@@ -4,6 +4,7 @@ import io.chapisoft.report.adapter.out.persistence.ReportTemplateRepository;
 import io.chapisoft.report.application.dto.ReportTemplateDto;
 import io.chapisoft.report.domain.exception.ResourceNotFoundException;
 import io.chapisoft.report.domain.model.QueryMode;
+import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.model.ReportTemplate;
 import io.chapisoft.report.domain.model.TemplateStatus;
 import io.chapisoft.report.domain.security.SqlSecurityAstValidator;
@@ -68,7 +69,7 @@ public class ReportTemplateService {
                 .transformJs(dto.getTransformJs())
                 .accessCount(0)
                 .createdAt(Instant.now())
-                .createdBy(createdBy != null ? createdBy : "SYSTEM")
+                .createdBy(createdBy != null ? createdBy : ReportConstants.CREATED_BY_SYSTEM)
                 .build();
 
         templateRepository.save(template);

@@ -16,6 +16,7 @@ import { VisualGuiBuilder } from "./VisualGuiBuilder";
 import { MonacoSqlEditor } from "./MonacoSqlEditor";
 import { LiveDataPreviewTable } from "./LiveDataPreviewTable";
 import { ExportModal } from "./ExportModal";
+import { PartnerAuthModal } from "./PartnerAuthModal";
 import { ExportTask, QueryMode, ThemeMode, BUILDER_CONSTANTS } from "../model/types";
 import { t } from "../../../shared/locales";
 import { toast } from "../../../shared/hooks/useToast";
@@ -34,7 +35,7 @@ export interface DynamicReportBuilderProps {
 
 export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
   engineUrl = "",
-  tenantId = BUILDER_CONSTANTS.DEFAULT_TENANT_ID,
+  tenantId,
   authToken,
   apiKey,
   theme = ThemeMode.LIGHT,
@@ -53,6 +54,11 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     activeTemplate,
   } = useReportBuilderStore();
 
+  const [currentTenant, setCurrentTenant] = useState<string>(tenantId || "");
+  const [currentApiKey, setCurrentApiKey] = useState<string | undefined>(apiKey);
+  const [currentAuthToken, setCurrentAuthToken] = useState<string | undefined>(authToken);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [templateName, setTemplateName] = useState(
     activeTemplate?.templateName || BUILDER_CONSTANTS.DEFAULT_TEMPLATE_NAME
@@ -63,11 +69,30 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    // 1. Kiểm tra thông tin xác thực từ props hoặc localStorage
+    const savedTenant = typeof window !== "undefined" ? localStorage.getItem("report_tenant_id") : null;
+    const savedApiKey = typeof window !== "undefined" ? localStorage.getItem("report_api_key") : null;
+    const savedAuthToken = typeof window !== "undefined" ? localStorage.getItem("report_auth_token") : null;
+
+    const effectiveTenant = tenantId || savedTenant;
+    const effectiveApiKey = apiKey || (savedApiKey || undefined);
+    const effectiveAuthToken = authToken || (savedAuthToken || undefined);
+
+    if (!effectiveTenant) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    setCurrentTenant(effectiveTenant);
+    setCurrentApiKey(effectiveApiKey);
+    setCurrentAuthToken(effectiveAuthToken);
+    setIsAuthModalOpen(false);
+
     initSession({
       engineUrl,
-      tenantId,
-      authToken,
-      apiKey,
+      tenantId: effectiveTenant,
+      authToken: effectiveAuthToken,
+      apiKey: effectiveApiKey,
       theme,
       defaultDatasourceCode,
       allowedDatasources,
@@ -84,6 +109,54 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     listDatasource,
     initSession,
   ]);
+
+  const handleAuthenticate = async (credentials: {
+    tenantId: string;
+    apiKey?: string;
+    authToken?: string;
+  }): Promise<boolean> => {
+    try {
+      await initSession({
+        engineUrl,
+        tenantId: credentials.tenantId,
+        authToken: credentials.authToken,
+        apiKey: credentials.apiKey,
+        theme,
+        defaultDatasourceCode,
+        allowedDatasources,
+        listDatasource,
+      });
+
+      setCurrentTenant(credentials.tenantId);
+      setCurrentApiKey(credentials.apiKey);
+      setCurrentAuthToken(credentials.authToken);
+      setIsAuthModalOpen(false);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("report_tenant_id", credentials.tenantId);
+        if (credentials.apiKey) localStorage.setItem("report_api_key", credentials.apiKey);
+        if (credentials.authToken) localStorage.setItem("report_auth_token", credentials.authToken);
+      }
+
+      toast.success(t("auth.authSuccess"));
+      return true;
+    } catch (err: any) {
+      toast.error(t("auth.invalidCredentials"));
+      return false;
+    }
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("report_tenant_id");
+      localStorage.removeItem("report_api_key");
+      localStorage.removeItem("report_auth_token");
+    }
+    setCurrentTenant("");
+    setCurrentApiKey(undefined);
+    setCurrentAuthToken(undefined);
+    setIsAuthModalOpen(true);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -103,6 +176,13 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
         currentTheme === "dark" ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"
       }`}
     >
+      {/* Modal Yêu Cầu Xác Thực Đối Tác */}
+      <PartnerAuthModal
+        isOpen={isAuthModalOpen}
+        initialTenantId={currentTenant}
+        onAuthenticate={handleAuthenticate}
+      />
+
       {/* Top Navigation & Mode Switcher Bar */}
       <header className="h-14 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0 z-20">
         <div className="flex items-center space-x-3">
@@ -117,9 +197,27 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
                   v4.0
                 </span>
               </h1>
-              <p className="text-[11px] text-slate-400 font-mono">
-                Tenant: {tenantId}
-              </p>
+              {currentTenant ? (
+                <div className="flex items-center space-x-2 mt-0.5">
+                  <div className="flex items-center space-x-1 px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 font-mono">
+                      {currentTenant}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="text-[10px] text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium underline transition-colors cursor-pointer"
+                    title={t("auth.logoutButton")}
+                  >
+                    {t("auth.logoutButton")}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[11px] text-amber-500 font-mono">
+                  {t("common.loading")}
+                </p>
+              )}
             </div>
           </div>
         </div>

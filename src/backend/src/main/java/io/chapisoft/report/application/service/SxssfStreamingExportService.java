@@ -6,6 +6,7 @@ import io.chapisoft.report.application.dto.ExportTaskDto;
 import io.chapisoft.report.domain.exception.ReportEngineException;
 import io.chapisoft.report.domain.model.ExportTask;
 import io.chapisoft.report.domain.model.QueryMode;
+import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.model.TaskStatus;
 import io.chapisoft.report.domain.security.BoundSql;
 import io.chapisoft.report.domain.security.DynamicParameterBinder;
@@ -68,9 +69,9 @@ public class SxssfStreamingExportService {
     }
 
     public ExportTaskDto exportToExcel(String tenantId, String createdBy, ExportRequest request) {
-        String taskCode = "EXP_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String baseName = request.getFileName() != null ? request.getFileName() : "BaoCao_" + taskCode;
-        String fileName = baseName + ".xlsx";
+        String taskCode = ReportConstants.PREFIX_TASK_CODE + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String baseName = request.getFileName() != null ? request.getFileName() : ReportConstants.DEFAULT_FILE_NAME_PREFIX + taskCode;
+        String fileName = baseName + ReportConstants.EXTENSION_EXCEL;
         File targetFile = new File(storageDir, taskCode + "_" + fileName);
 
         ExportTask task = ExportTask.builder()
@@ -81,8 +82,8 @@ public class SxssfStreamingExportService {
                 .filePath(targetFile.getAbsolutePath())
                 .status(TaskStatus.PROCESSING)
                 .createdAt(Instant.now())
-                .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
-                .createdBy(createdBy != null ? createdBy : "SYSTEM")
+                .expiresAt(Instant.now().plus(ReportConstants.DEFAULT_EXPORT_EXPIRATION_HOURS, ChronoUnit.HOURS))
+                .createdBy(createdBy != null ? createdBy : ReportConstants.CREATED_BY_SYSTEM)
                 .build();
 
         exportTaskRepository.save(task);
@@ -99,7 +100,7 @@ public class SxssfStreamingExportService {
                  FileOutputStream fos = new FileOutputStream(targetFile)) {
 
                 workbook.setCompressTempFiles(true);
-                Sheet sheet = workbook.createSheet("Report Data");
+                Sheet sheet = workbook.createSheet(ReportConstants.DEFAULT_SHEET_NAME);
 
                 jdbcTemplate.query(
                         Objects.requireNonNull(boundSql.sql()),
@@ -161,9 +162,9 @@ public class SxssfStreamingExportService {
     }
 
     public ExportTaskDto exportToCsv(String tenantId, String createdBy, ExportRequest request) {
-        String taskCode = "EXP_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String baseName = request.getFileName() != null ? request.getFileName() : "BaoCao_" + taskCode;
-        String fileName = baseName + ".csv";
+        String taskCode = ReportConstants.PREFIX_TASK_CODE + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String baseName = request.getFileName() != null ? request.getFileName() : ReportConstants.DEFAULT_FILE_NAME_PREFIX + taskCode;
+        String fileName = baseName + ReportConstants.EXTENSION_CSV;
         File targetFile = new File(storageDir, taskCode + "_" + fileName);
 
         ExportTask task = ExportTask.builder()
@@ -174,8 +175,8 @@ public class SxssfStreamingExportService {
                 .filePath(targetFile.getAbsolutePath())
                 .status(TaskStatus.PROCESSING)
                 .createdAt(Instant.now())
-                .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
-                .createdBy(createdBy != null ? createdBy : "SYSTEM")
+                .expiresAt(Instant.now().plus(ReportConstants.DEFAULT_EXPORT_EXPIRATION_HOURS, ChronoUnit.HOURS))
+                .createdBy(createdBy != null ? createdBy : ReportConstants.CREATED_BY_SYSTEM)
                 .build();
 
         exportTaskRepository.save(task);
@@ -190,7 +191,7 @@ public class SxssfStreamingExportService {
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile, StandardCharsets.UTF_8))) {
                 // Thêm UTF-8 BOM để Excel mở CSV tiếng Việt không bị lỗi font
-                writer.write('\ufeff');
+                writer.write(ReportConstants.UTF8_BOM);
 
                 jdbcTemplate.query(
                         Objects.requireNonNull(boundSql.sql()),
@@ -199,30 +200,34 @@ public class SxssfStreamingExportService {
                     ResultSetMetaData metaData = rs.getMetaData();
                     int colCount = metaData.getColumnCount();
 
-                    // Header
+                    // Header Row
                     StringBuilder header = new StringBuilder();
                     for (int i = 1; i <= colCount; i++) {
                         if (i > 1) header.append(",");
                         header.append(escapeCsv(metaData.getColumnLabel(i)));
                     }
+                    header.append("\n");
                     try {
                         writer.write(header.toString());
-                        writer.newLine();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
-                        // Data Rows
-                        while (rs.next()) {
-                            rowCount.incrementAndGet();
-                            StringBuilder row = new StringBuilder();
-                            for (int i = 1; i <= colCount; i++) {
-                                if (i > 1) row.append(",");
-                                Object val = rs.getObject(i);
-                                row.append(escapeCsv(val != null ? val.toString() : ""));
-                            }
-                            writer.write(row.toString());
-                            writer.newLine();
+                    // Data Rows
+                    while (rs.next()) {
+                        rowCount.incrementAndGet();
+                        StringBuilder row = new StringBuilder();
+                        for (int i = 1; i <= colCount; i++) {
+                            if (i > 1) row.append(",");
+                            Object val = rs.getObject(i);
+                            row.append(escapeCsv(val != null ? val.toString() : ""));
                         }
-                    } catch (IOException ioe) {
-                        throw new ReportEngineException("Lỗi ghi file CSV", ioe);
+                        row.append("\n");
+                        try {
+                            writer.write(row.toString());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     return null;
                 });
@@ -253,10 +258,13 @@ public class SxssfStreamingExportService {
     }
 
     private String resolveSql(ExportRequest request) {
-        if (request.getMode() == QueryMode.SQL) {
+        if (request.getMode() == QueryMode.SQL && request.getSql() != null && !request.getSql().trim().isEmpty()) {
             return request.getSql();
         }
-        return queryExecutionService.generateSqlFromGuiConfig(request.getConfigJson());
+        if (request.getConfigJson() != null && !request.getConfigJson().trim().isEmpty()) {
+            return queryExecutionService.generateSqlFromGuiConfig(request.getConfigJson());
+        }
+        throw new ReportEngineException("Không tìm thấy câu lệnh SQL để xuất dữ liệu.");
     }
 
     private String escapeCsv(String value) {

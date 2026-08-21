@@ -4,10 +4,13 @@ import io.chapisoft.report.application.dto.QueryPreviewRequest;
 import io.chapisoft.report.application.dto.QueryPreviewResponse;
 import io.chapisoft.report.domain.exception.ReportEngineException;
 import io.chapisoft.report.domain.model.QueryMode;
+import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.security.BoundSql;
 import io.chapisoft.report.domain.security.DynamicParameterBinder;
 import io.chapisoft.report.domain.security.SqlSecurityAstValidator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -26,20 +29,26 @@ public class QueryExecutionService {
     private final DynamicDataSourceManager dataSourceManager;
     private final SqlSecurityAstValidator sqlSecurityAstValidator;
     private final DynamicParameterBinder parameterBinder;
+    private final ObjectMapper objectMapper;
 
     public QueryExecutionService(DynamicDataSourceManager dataSourceManager,
                                  SqlSecurityAstValidator sqlSecurityAstValidator,
-                                 DynamicParameterBinder parameterBinder) {
+                                 DynamicParameterBinder parameterBinder,
+                                 ObjectMapper objectMapper) {
         this.dataSourceManager = dataSourceManager;
         this.sqlSecurityAstValidator = sqlSecurityAstValidator;
         this.parameterBinder = parameterBinder;
+        this.objectMapper = objectMapper;
     }
 
     public QueryPreviewResponse executePreview(String tenantId, QueryPreviewRequest request) {
         long startTime = System.currentTimeMillis();
         String rawSql;
 
-        if (request.getMode() == QueryMode.SQL) {
+        // Ưu tiên sử dụng SQL đã được frontend biên dịch hoặc chế độ SQL
+        if (request.getSql() != null && !request.getSql().trim().isEmpty()) {
+            rawSql = request.getSql();
+        } else if (request.getMode() == QueryMode.SQL) {
             rawSql = request.getSql();
         } else {
             rawSql = generateSqlFromGuiConfig(request.getConfigJson());
@@ -55,9 +64,9 @@ public class QueryExecutionService {
         // 2. Chuyển đổi tham số động {{params.var}} thành Named Parameters :param_var
         BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
-        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng)
-        int limit = (request.getLimit() != null && request.getLimit() > 0 && request.getLimit() <= 500) 
-                ? request.getLimit() : 50;
+        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng)
+        int limit = (request.getLimit() != null && request.getLimit() > 0 && request.getLimit() <= ReportConstants.MAX_PREVIEW_LIMIT) 
+                ? request.getLimit() : ReportConstants.DEFAULT_PREVIEW_LIMIT;
         
         String limitedSql = "SELECT * FROM (" + boundSql.sql() + ") AS preview_wrapper LIMIT " + limit;
 
@@ -108,11 +117,94 @@ public class QueryExecutionService {
         if (configJson == null || configJson.trim().isEmpty()) {
             return "SELECT 1 AS status";
         }
-        // Trả về SQL từ configJson nếu nó chứa SQL, hoặc sinh SQL đơn giản
-        if (configJson.trim().startsWith("SELECT") || configJson.trim().startsWith("WITH")) {
-            return configJson;
+        String trimmed = configJson.trim();
+        if (trimmed.startsWith("SELECT") || trimmed.startsWith("WITH") || trimmed.startsWith("select") || trimmed.startsWith("with")) {
+            return trimmed;
         }
-        // Trường hợp configJson là JSON cấu hình visual builder
-        return configJson;
+
+        try {
+            JsonNode root = objectMapper.readTree(trimmed);
+            String primaryTable = root.path("primaryTable").asText(null);
+            if (primaryTable == null || primaryTable.trim().isEmpty()) {
+                return "SELECT 1 AS status";
+            }
+
+            StringBuilder selectClause = new StringBuilder();
+            JsonNode cols = root.path("columns");
+            if (cols.isArray() && cols.size() > 0) {
+                for (int i = 0; i < cols.size(); i++) {
+                    JsonNode col = cols.get(i);
+                    String tbl = col.path("tableName").asText(primaryTable);
+                    String colName = col.path("columnName").asText("*");
+                    String agg = col.path("aggregation").asText(null);
+                    String alias = col.path("alias").asText(null);
+
+                    if (i > 0) selectClause.append(", ");
+                    String colExpr = tbl + "." + colName;
+                    if (agg != null && !agg.equalsIgnoreCase("NONE") && !agg.trim().isEmpty()) {
+                        colExpr = agg + "(" + colExpr + ")";
+                    }
+                    selectClause.append(colExpr);
+                    if (alias != null && !alias.trim().isEmpty() && !alias.equalsIgnoreCase(colName)) {
+                        selectClause.append(" AS ").append(alias);
+                    }
+                }
+            } else {
+                selectClause.append("*");
+            }
+
+            StringBuilder sql = new StringBuilder("SELECT ").append(selectClause).append(" FROM ").append(primaryTable);
+
+            // Joins
+            JsonNode joins = root.path("joins");
+            if (joins.isArray()) {
+                for (JsonNode j : joins) {
+                    String jType = j.path("joinType").asText("INNER");
+                    String sTable = j.path("sourceTable").asText(primaryTable);
+                    String sCol = j.path("sourceColumn").asText();
+                    String tTable = j.path("targetTable").asText();
+                    String tCol = j.path("targetColumn").asText();
+
+                    if (!tTable.isEmpty() && !sCol.isEmpty() && !tCol.isEmpty()) {
+                        sql.append("\n").append(jType).append(" JOIN ").append(tTable)
+                                .append(" ON ").append(sTable).append(".").append(sCol)
+                                .append(" = ").append(tTable).append(".").append(tCol);
+                    }
+                }
+            }
+
+            // Filters
+            JsonNode filters = root.path("filters");
+            if (filters.isArray() && filters.size() > 0) {
+                sql.append("\nWHERE ");
+                for (int i = 0; i < filters.size(); i++) {
+                    JsonNode f = filters.get(i);
+                    String fLogic = f.path("logic").asText("AND");
+                    String fTable = f.path("tableName").asText(primaryTable);
+                    String fCol = f.path("columnName").asText();
+                    String fOp = f.path("operator").asText("=");
+                    String fVal = f.path("value").asText("");
+
+                    if (i > 0) {
+                        sql.append(" ").append(fLogic).append(" ");
+                    }
+                    if (fOp.equalsIgnoreCase("IS NULL") || fOp.equalsIgnoreCase("IS NOT NULL")) {
+                        sql.append(fTable).append(".").append(fCol).append(" ").append(fOp);
+                    } else if (fVal.startsWith("{{") && fVal.endsWith("}}")) {
+                        sql.append(fTable).append(".").append(fCol).append(" ").append(fOp).append(" ").append(fVal);
+                    } else {
+                        sql.append(fTable).append(".").append(fCol).append(" ").append(fOp).append(" '").append(fVal).append("'");
+                    }
+                }
+            }
+
+            int limit = root.path("limit").asInt(50);
+            sql.append("\nLIMIT ").append(limit);
+
+            return sql.toString();
+        } catch (Exception e) {
+            log.warn("Không thể parse configJson sang SQL: {}", e.getMessage());
+            return "SELECT 1 AS status";
+        }
     }
 }

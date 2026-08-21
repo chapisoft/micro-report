@@ -324,11 +324,49 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
 
     let sql = `SELECT ${selectExprs}\nFROM ${guiConfig.primaryTable}`;
 
+    const explicitJoinedTables = new Set(guiConfig.joins.map((j) => j.targetTable));
+
     if (guiConfig.joins && guiConfig.joins.length > 0) {
       guiConfig.joins.forEach((j) => {
         sql += `\n${j.joinType || "INNER"} JOIN ${j.targetTable} ON ${j.sourceTable}.${j.sourceColumn} = ${j.targetTable}.${j.targetColumn}`;
       });
     }
+
+    // Tự động thêm JOIN cho các bảng có cột được chọn nhưng chưa nằm trong explicit joins
+    const otherTablesWithCols = Array.from(
+      new Set(
+        guiConfig.columns
+          .map((c) => c.tableName)
+          .filter((t) => t && t !== guiConfig.primaryTable && !explicitJoinedTables.has(t))
+      )
+    );
+
+    const tables = get().schemaInfo?.tables || [];
+    const primaryTableObj = tables.find((t) => t.tableName === guiConfig.primaryTable);
+
+    otherTablesWithCols.forEach((otherTableName) => {
+      const otherTableObj = tables.find((t) => t.tableName === otherTableName);
+      if (primaryTableObj && otherTableObj) {
+        // 1. Tìm cột trùng tên (ví dụ: dossier_id, agent_user_id, id)
+        const commonCol = primaryTableObj.columns.find((pc) =>
+          otherTableObj.columns.some((oc) => oc.columnName === pc.columnName)
+        );
+        if (commonCol) {
+          sql += `\nLEFT JOIN ${otherTableName} ON ${guiConfig.primaryTable}.${commonCol.columnName} = ${otherTableName}.${commonCol.columnName}`;
+        } else {
+          // 2. Tìm theo khóa ngoại pattern [table]_id
+          const fkInPrimary = primaryTableObj.columns.find(
+            (c) => c.columnName === `${otherTableName}_id` || c.columnName === "id"
+          );
+          const pkInOther = otherTableObj.columns.find(
+            (c) => c.columnName === `${guiConfig.primaryTable}_id` || c.columnName === "id"
+          );
+          if (fkInPrimary && pkInOther) {
+            sql += `\nLEFT JOIN ${otherTableName} ON ${guiConfig.primaryTable}.${fkInPrimary.columnName} = ${otherTableName}.${pkInOther.columnName}`;
+          }
+        }
+      }
+    });
 
     if (guiConfig.filters && guiConfig.filters.length > 0) {
       const whereClauses = guiConfig.filters.map((f, idx) => {

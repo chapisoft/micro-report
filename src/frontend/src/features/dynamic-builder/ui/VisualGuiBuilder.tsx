@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Code,
   Filter,
   GitCommit,
   Layers,
@@ -18,7 +17,6 @@ import {
   FilterOperator,
   JoinRelation,
   JoinType,
-  QueryMode,
   SelectedColumn,
 } from "../model/types";
 import { t } from "../../../shared/locales";
@@ -84,36 +82,8 @@ export const VisualGuiBuilder: React.FC = () => {
     }
   };
 
-  const handleConvertToSql = () => {
-    convertGuiToSql();
-    setMode(QueryMode.SQL);
-  };
-
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-slate-950">
-      {/* Top Banner & Quick Convert */}
-      <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="font-bold text-base text-slate-800 dark:text-slate-100">
-              {t("builder.modeNoCode")}
-            </h2>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {t("builder.addColumnsHint")}
-          </p>
-        </div>
-
-        <button
-          onClick={handleConvertToSql}
-          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold shadow-md transition-all active:scale-95"
-        >
-          <Code className="w-4 h-4" />
-          <span>{t("builder.convertToSql")}</span>
-        </button>
-      </div>
-
       {/* 1. Bảng Dữ Liệu Gốc (Primary Table) */}
       <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
         <div className="flex items-center space-x-2 text-slate-800 dark:text-slate-200 font-semibold text-sm">
@@ -245,20 +215,27 @@ export const VisualGuiBuilder: React.FC = () => {
             onChange={(e) =>
               setNewJoin({ ...newJoin, joinType: e.target.value as JoinType })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-semibold"
           >
             <option value={JoinType.INNER}>INNER JOIN</option>
             <option value={JoinType.LEFT}>LEFT JOIN</option>
             <option value={JoinType.RIGHT}>RIGHT JOIN</option>
           </select>
 
+          {/* Bảng Nguồn (Mặc định lấy Bảng chính nếu chưa chọn) */}
           <select
             aria-label={t("builder.joinSourceTable")}
-            value={newJoin.sourceTable || ""}
-            onChange={(e) =>
-              setNewJoin({ ...newJoin, sourceTable: e.target.value })
-            }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
+            value={newJoin.sourceTable || guiConfig.primaryTable || ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              setNewJoin({
+                ...newJoin,
+                sourceTable: val,
+                sourceColumn: "",
+                targetTable: newJoin.targetTable === val ? "" : newJoin.targetTable,
+              });
+            }}
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
           >
             <option value="">-- {t("builder.joinSourceTable")} --</option>
             {availableTables.map((tItem) => (
@@ -268,45 +245,79 @@ export const VisualGuiBuilder: React.FC = () => {
             ))}
           </select>
 
-          <input
-            type="text"
-            placeholder={t("builder.joinSourceColumn")}
+          {/* Cột Bảng Nguồn */}
+          <select
+            aria-label={t("builder.joinSourceColumn")}
             value={newJoin.sourceColumn || ""}
             onChange={(e) =>
               setNewJoin({ ...newJoin, sourceColumn: e.target.value })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
-          />
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
+          >
+            <option value="">-- {t("builder.joinSourceColumn")} --</option>
+            {availableTables
+              .find(
+                (t) =>
+                  t.tableName ===
+                  (newJoin.sourceTable || guiConfig.primaryTable)
+              )
+              ?.columns.map((col) => (
+                <option key={col.columnName} value={col.columnName}>
+                  {col.columnName} ({col.dataType})
+                </option>
+              ))}
+          </select>
 
+          {/* Bảng Đích: BẮT BUỘC LOẠI TRỪ BẢNG NGUỒN ĐỂ TRÁNH CHỌN TRÙNG BẢNG CHÍNH */}
           <select
             aria-label={t("builder.joinTargetTable")}
             value={newJoin.targetTable || ""}
             onChange={(e) =>
-              setNewJoin({ ...newJoin, targetTable: e.target.value })
+              setNewJoin({ ...newJoin, targetTable: e.target.value, targetColumn: "" })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
           >
             <option value="">-- {t("builder.joinTargetTable")} --</option>
-            {availableTables.map((tItem) => (
-              <option key={tItem.tableName} value={tItem.tableName}>
-                {tItem.tableName}
-              </option>
-            ))}
+            {availableTables
+              .filter(
+                (tItem) =>
+                  tItem.tableName !==
+                  (newJoin.sourceTable || guiConfig.primaryTable)
+              )
+              .map((tItem) => (
+                <option key={tItem.tableName} value={tItem.tableName}>
+                  {tItem.tableName}
+                </option>
+              ))}
           </select>
 
+          {/* Cột Bảng Đích */}
           <div className="flex space-x-1">
-            <input
-              type="text"
-              placeholder={t("builder.joinTargetColumn")}
+            <select
+              aria-label={t("builder.joinTargetColumn")}
               value={newJoin.targetColumn || ""}
               onChange={(e) =>
                 setNewJoin({ ...newJoin, targetColumn: e.target.value })
               }
-              className="p-2 bg-white dark:bg-slate-900 border rounded font-mono flex-1"
-            />
+              className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono flex-1"
+            >
+              <option value="">-- {t("builder.joinTargetColumn")} --</option>
+              {availableTables
+                .find((t) => t.tableName === newJoin.targetTable)
+                ?.columns.map((col) => (
+                  <option key={col.columnName} value={col.columnName}>
+                    {col.columnName} ({col.dataType})
+                  </option>
+                ))}
+            </select>
             <button
               onClick={handleAddJoin}
-              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold"
+              disabled={
+                !newJoin.sourceColumn ||
+                !newJoin.targetTable ||
+                !newJoin.targetColumn
+              }
+              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded font-semibold transition-all cursor-pointer"
               title={t("builder.addJoin")}
             >
               <Plus className="w-4 h-4" />
@@ -356,19 +367,20 @@ export const VisualGuiBuilder: React.FC = () => {
             onChange={(e) =>
               setNewFilter({ ...newFilter, logic: e.target.value as FilterLogic })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-semibold"
           >
             <option value={FilterLogic.AND}>AND</option>
             <option value={FilterLogic.OR}>OR</option>
           </select>
 
+          {/* Chọn Bảng Lọc (Mặc định Bảng chính) */}
           <select
             aria-label={t("builder.filterTable")}
-            value={newFilter.tableName || ""}
+            value={newFilter.tableName || guiConfig.primaryTable || ""}
             onChange={(e) =>
-              setNewFilter({ ...newFilter, tableName: e.target.value })
+              setNewFilter({ ...newFilter, tableName: e.target.value, columnName: "" })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
           >
             <option value="">-- {t("builder.filterTable")} --</option>
             {availableTables.map((tItem) => (
@@ -378,15 +390,28 @@ export const VisualGuiBuilder: React.FC = () => {
             ))}
           </select>
 
-          <input
-            type="text"
-            placeholder={t("builder.filterColumn")}
+          {/* Chọn Cột Lọc từ Bảng đã chọn */}
+          <select
+            aria-label={t("builder.filterColumn")}
             value={newFilter.columnName || ""}
             onChange={(e) =>
               setNewFilter({ ...newFilter, columnName: e.target.value })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
-          />
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
+          >
+            <option value="">-- {t("builder.filterColumn")} --</option>
+            {availableTables
+              .find(
+                (t) =>
+                  t.tableName ===
+                  (newFilter.tableName || guiConfig.primaryTable)
+              )
+              ?.columns.map((col) => (
+                <option key={col.columnName} value={col.columnName}>
+                  {col.columnName} ({col.dataType})
+                </option>
+              ))}
+          </select>
 
           <select
             aria-label={t("builder.filterOperator")}
@@ -394,7 +419,7 @@ export const VisualGuiBuilder: React.FC = () => {
             onChange={(e) =>
               setNewFilter({ ...newFilter, operator: e.target.value as FilterOperator })
             }
-            className="p-2 bg-white dark:bg-slate-900 border rounded font-mono"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded font-mono"
           >
             <option value={FilterOperator.EQUALS}>=</option>
             <option value={FilterOperator.NOT_EQUALS}>!=</option>

@@ -39,7 +39,8 @@ services:
       REPORT_SECURITY_AES_SECRET_KEY: ${REPORT_AES_KEY:-MascomReportEngineSecureSecretKey2026!#}
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
     ports:
-      - "8088:8080"
+      - "127.0.0.1:8088:8080"
+      - "172.18.0.1:8088:8080"
     depends_on:
       report-metadata-db:
         condition: service_healthy
@@ -59,7 +60,8 @@ services:
     container_name: micro-report-frontend
     restart: unless-stopped
     ports:
-      - "3008:3000"
+      - "127.0.0.1:3008:3000"
+      - "172.18.0.1:3008:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
