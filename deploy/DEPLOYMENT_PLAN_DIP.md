@@ -159,14 +159,70 @@ server {
 
 ---
 
-## 4. QUY TRÌNH THỰC HIỆN DEPLOY CHI TIẾT (STEP-BY-STEP RUNBOOK)
+## 4. QUY TRÌNH CI/CD TỰ ĐỘNG HÓA VỚI MÁY CHỦ JENKINS
 
-### Bước 1: Chuẩn Bị & Đẩy Mã Nguồn Lên Máy Chủ DIP
+Hệ thống được thiết lập pipeline tự động hóa hoàn toàn với máy chủ Jenkins tại `210.211.102.99` tương tự như `micro-crm` và `micro-loyalty`:
+
+```mermaid
+flowchart LR
+    subgraph S_SRC ["NGUỒN MÃ & PHÂN TÍCH"]
+        direction TB
+        GitPush["GitHub Push Event<br/>• Nhánh main (Production)<br/>• Nhánh develop (Dev)<br/>• Quét định kỳ PollSCM 2 phút"]
+        DetectScope["Detect Changes & Scope<br/>• src/backend → report-backend<br/>• src/frontend → report-frontend<br/>• deploy/ → build toàn bộ"]
+        GitPush --> DetectScope
+    end
+
+    subgraph S_STAGE ["KIỂM THỬ & ĐÓNG GÓI"]
+        direction TB
+        SafeMigration["🛡️ Flyway Safety Check<br/>• Chặn DROP / TRUNCATE"]
+        BE_Pack["☕ Backend Gradle bootJar<br/>• Eclipse Temurin JDK 21<br/>• Caching & Unit Tests"]
+        FE_Pack["🖥️ Frontend Next.js Standalone<br/>• Node 20 & npm run build<br/>• Standalone Packaging"]
+        SafeMigration --> BE_Pack
+        SafeMigration --> FE_Pack
+    end
+
+    subgraph S_OPS ["TRIỂN KHAI & CẢNH BÁO"]
+        direction TB
+        DockerRolling["🐳 Docker Rolling Update<br/>• docker compose dip-network<br/>• Cập nhật container đích"]
+        HealthVerif["🔍 Post-Deploy Health Check<br/>• Actuator /actuator/health<br/>• Kiểm tra cổng 8088 & 3008"]
+        TelegramNotice["📢 Telegram Alert 100%<br/>• Báo Success / Failure<br/>• Gửi log tới nhóm vận hành"]
+        DockerRolling --> HealthVerif
+        HealthVerif --> TelegramNotice
+    end
+
+    DetectScope --> SafeMigration
+    BE_Pack --> DockerRolling
+    FE_Pack --> DockerRolling
+```
+
+### 4.1. Thông Tin Cấu Hình Jenkins Pipeline
+* **Jenkins Job URL:** `https://jenkins.dip.io.vn/jenkins/job/Micro-Report/`
+* **Môi trường thực thi (Tools):**
+  * `jdk 'jdk-21'`
+  * `nodejs 'node-20'`
+* **Tham số Pipeline:**
+  * `TARGET_SERVICE`: `all` (mặc định), `report-backend`, `report-frontend`.
+  * `SKIP_TESTS`: `false` (mặc định), bật `true` khi cần hotfix khẩn cấp.
+* **Kênh Cảnh Báo Telegram:**
+  * Bot Token: `8694821173:AAFJ3XlvDpYRywzEiB54RSNjAdS62XPKZXA`
+  * Chat ID: `-5397937309`
+
+---
+
+## 5. QUY TRÌNH THỰC HIỆN DEPLOY THỦ CÔNG (FALLBACK RUNBOOK)
+
+Trong trường hợp cần can thiệp trực tiếp từ máy chủ (không thông qua Jenkins):
+
+### Bước 1: Chuẩn Bị & Cập Nhật Mã Nguồn Trên Máy Chủ
 1. Đăng nhập SSH vào server DIP:
    ```bash
    ssh -p 65000 -i ~/.ssh/jenkins_deploy_dev dip@210.211.102.99
    ```
-2. Truy cập thư mục ứng dụng `/home/dip/micro-report` và cập nhật nhánh `main`.
+2. Truy cập thư mục ứng dụng `/home/dip/micro-report` và cập nhật nhánh `main`:
+   ```bash
+   cd /home/dip/micro-report
+   git pull origin main
+   ```
 
 ---
 
@@ -178,20 +234,26 @@ Chạy lệnh triển khai:
 
 ---
 
-### Bước 3: Kịch Bản Kiểm Thử Hậu Triển Khai (Smoke Testing Matrix)
+## 6. KỊCH BẢN KIỂM THỬ HẬU TRIỂN KHAI (SMOKE TESTING MATRIX)
 
 | STT | Endpoint / URL Kiểm Thử | Phương Thức | Kết Quả Mong Đợi |
 |:---:|---|:---:|---|
-| 1 | `http://localhost:8088/actuator/health` | GET | Status `UP` |
-| 2 | `http://localhost:8088/api/v1/reports/datasources` | GET (`X-Tenant-Id: DIP_BHXH`) | Trả về danh sách DataSource của DIP |
-| 3 | `http://localhost:8088/api/v1/reports/datasources?listDatasource=DIP_DWH` | GET (`X-Tenant-Id: DIP_BHXH`) | Chỉ trả về `DIP_DWH` |
-| 4 | `http://localhost:8088/api/v1/reports/templates/published` | GET (`X-Tenant-Id: DIP_BHXH`) | Trả về danh sách 3 mẫu báo cáo đã xuất bản |
-| 5 | `http://localhost:3008/embed/reports/viewer?tenant=DIP_BHXH` | GET | HTTP 200, hiển thị giao diện Standalone Viewer |
-| 6 | `http://localhost:3008/reports/builder` | GET | HTTP 200, hiển thị giao diện Dual-Mode Builder |
+| 1 | `http://localhost:8088/actuator/health` | GET | HTTP 200, Status `UP` |
+| 2 | `http://localhost:8088/v3/api-docs` | GET | HTTP 200, OpenAPI JSON spec |
+| 3 | `http://localhost:8088/api/v1/reports/datasources` | GET (`X-Tenant-Id: DIP_BHXH`) | Trả về danh sách DataSource của DIP |
+| 4 | `http://localhost:8088/api/v1/reports/datasources?listDatasource=DIP_DWH` | GET (`X-Tenant-Id: DIP_BHXH`) | Chỉ trả về `DIP_DWH` |
+| 5 | `http://localhost:8088/api/v1/reports/templates/published` | GET (`X-Tenant-Id: DIP_BHXH`) | Trả về danh sách mẫu báo cáo đã xuất bản |
+| 6 | `http://localhost:3008/embed/reports/viewer?tenant=DIP_BHXH` | GET | HTTP 200, hiển thị giao diện Standalone Viewer |
+| 7 | `http://localhost:3008/reports/builder` | GET | HTTP 200, hiển thị giao diện Dual-Mode Builder |
+
+Có thể kiểm tra nhanh tự động bằng script:
+```bash
+./scripts/check_health.sh 8088 3008
+```
 
 ---
 
-## 5. KẾ HOẠCH DỰ PHÒNG & ROLLBACK (ROLLBACK PROCEDURE)
+## 7. KẾ HOẠCH DỰ PHÒNG & ROLLBACK (ROLLBACK PROCEDURE)
 
 Nếu phát sinh sự cố trong quá trình triển khai:
 1. Quay về commit ổn định trước đó: `git checkout <commit_id>`.
@@ -201,3 +263,7 @@ Nếu phát sinh sự cố trong quá trình triển khai:
    docker compose -f deploy/docker-compose.dip.yml up -d
    ```
 3. Dữ liệu PostgreSQL Metadata được bảo toàn nguyên vẹn tại thư mục `/home/dip/data/report_metadata_db`.
+4. Gửi thông báo khẩn cấp tới nhóm phát triển:
+   ```bash
+   ./scripts/notify_telegram.sh "🚨 Đã thực hiện ROLLBACK Micro-Report về commit <commit_id> do lỗi vận hành." "FAILED"
+   ```
