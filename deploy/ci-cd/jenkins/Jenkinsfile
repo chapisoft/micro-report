@@ -15,12 +15,7 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timestamps()
-        disableConcurrentBuilds(abortPrevious: true)
-    }
-
-    triggers {
-        githubPush()
-        pollSCM('H/2 * * * *') // Fallback dự phòng: Quét Git mỗi 2 phút nếu Webhook gặp sự cố mạng
+        disableConcurrentBuilds()
     }
 
     parameters {
@@ -281,17 +276,29 @@ pipeline {
                         BACKEND_OK=0
                         FRONTEND_OK=0
 
+                        check_http() {
+                            local url="$1"
+                            curl -s --connect-timeout 2 --max-time 4 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                        }
+
                         for i in $(seq 1 15); do
-                            # 1. Kiểm tra Backend Actuator Health hoặc Swagger UI
-                            STATUS_BE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8088/actuator/health" 2>/dev/null || \
-                                       curl -s -o /dev/null -w "%{http_code}" "http://172.18.0.1:8088/actuator/health" 2>/dev/null || \
-                                       curl -s -o /dev/null -w "%{http_code}" "http://210.211.102.99:8088/actuator/health" 2>/dev/null || \
-                                       curl -s -o /dev/null -w "%{http_code}" "http://localhost:8088/swagger-ui/index.html" 2>/dev/null || echo "000")
+                            # 1. Kiểm tra Backend
+                            STATUS_BE=$(check_http "http://micro-report-backend:8080/actuator/health")
+                            if [ "$STATUS_BE" != "200" ]; then
+                                STATUS_BE=$(check_http "http://172.18.0.1:8088/actuator/health")
+                            fi
+                            if [ "$STATUS_BE" != "200" ]; then
+                                STATUS_BE=$(check_http "http://localhost:8088/actuator/health")
+                            fi
                             
-                            # 2. Kiểm tra Frontend Next.js Web App
-                            STATUS_FE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3008" 2>/dev/null || \
-                                       curl -s -o /dev/null -w "%{http_code}" "http://172.18.0.1:3008" 2>/dev/null || \
-                                       curl -s -o /dev/null -w "%{http_code}" "http://210.211.102.99:3008" 2>/dev/null || echo "000")
+                            # 2. Kiểm tra Frontend
+                            STATUS_FE=$(check_http "http://micro-report-frontend:3000")
+                            if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
+                                STATUS_FE=$(check_http "http://172.18.0.1:3008")
+                            fi
+                            if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
+                                STATUS_FE=$(check_http "http://localhost:3008")
+                            fi
 
                             if [ "$STATUS_BE" = "200" ] || [ "$STATUS_BE" = "302" ]; then
                                 BACKEND_OK=1
@@ -305,8 +312,8 @@ pipeline {
                                 exit 0
                             fi
 
-                            echo "Lần thử $i/15: Backend HTTP $STATUS_BE | Frontend HTTP $STATUS_FE. Thử lại sau 4s..."
-                            sleep 4
+                            echo "Lần thử $i/15: Backend HTTP $STATUS_BE | Frontend HTTP $STATUS_FE. Thử lại sau 3s..."
+                            sleep 3
                         done
 
                         echo "⚠️ Đã hết thời gian chờ Health Check (Các container đang tiếp tục khởi động ngầm)."
