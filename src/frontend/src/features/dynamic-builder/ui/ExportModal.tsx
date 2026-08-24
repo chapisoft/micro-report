@@ -40,6 +40,45 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [exportResult, setExportResult] = useState<ExportTask | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadFile = async () => {
+    if (!exportResult) return;
+    setIsDownloading(true);
+    try {
+      const url = exportResult.downloadUrl || `/api/v1/reports/export/download/${exportResult.taskCode}`;
+      const token = typeof window !== "undefined" ? localStorage.getItem("report_auth_token") : null;
+      const apiKey = typeof window !== "undefined" ? localStorage.getItem("report_api_key") : null;
+      const tenantId = typeof window !== "undefined" ? localStorage.getItem("report_tenant_id") : null;
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          ...(tenantId ? { "X-Tenant-Id": tenantId } : {}),
+          ...(apiKey ? { "X-API-Key": apiKey } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Tải file thất bại (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = exportResult.fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Lỗi tải file");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -168,14 +207,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 <p>{t("export.fileSize")}: {Math.round((exportResult.fileSizeBytes || 0) / 1024)} KB</p>
               </div>
 
-              <a
-                href={exportResult.downloadUrl || `/api/v1/reports/export/download/${exportResult.taskCode}`}
-                download
-                className="flex items-center justify-center space-x-2 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs shadow transition-colors"
+              <button
+                type="button"
+                onClick={handleDownloadFile}
+                disabled={isDownloading}
+                className="flex items-center justify-center space-x-2 w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-semibold text-xs shadow transition-all active:scale-95 cursor-pointer"
               >
-                <Download className="w-4 h-4" />
-                <span>{t("export.downloadNow")}</span>
-              </a>
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>{isDownloading ? t("common.download") + "..." : t("export.downloadNow")}</span>
+              </button>
             </div>
           )}
         </div>

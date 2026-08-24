@@ -5,11 +5,13 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
+  Eye,
   Key,
   Layers,
   Search,
   Table as TableIcon,
 } from "lucide-react";
+import { QuickSampleModal } from "./QuickSampleModal";
 import { useReportBuilderStore } from "../model/useReportBuilderStore";
 import { t } from "../../../shared/locales";
 
@@ -29,6 +31,7 @@ export const SchemaTreeExplorer: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>({});
+  const [quickSampleTable, setQuickSampleTable] = useState<string | null>(null);
 
   const toggleTableExpand = (tableName: string) => {
     setExpandedTables((prev) => ({
@@ -108,7 +111,7 @@ export const SchemaTreeExplorer: React.FC = () => {
               >
                 {/* Table Row */}
                 <div
-                  className={`flex items-center justify-between px-2.5 py-2 cursor-pointer rounded hover:bg-slate-100 dark:hover:bg-slate-800/60 ${
+                  className={`flex items-center justify-between px-2.5 py-2 cursor-pointer rounded hover:bg-slate-100 dark:hover:bg-slate-800/60 group ${
                     isSelected
                       ? "bg-blue-50/70 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
                       : "text-slate-700 dark:text-slate-300"
@@ -129,6 +132,18 @@ export const SchemaTreeExplorer: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-1 shrink-0">
+                    {/* Quick Sample Button */}
+                    <button
+                      title={t("quickSample.btnTooltip")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQuickSampleTable(table.tableName);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+
                     {isPrimary ? (
                       <span className="text-[10px] px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded font-semibold">
                         Gốc
@@ -181,9 +196,10 @@ export const SchemaTreeExplorer: React.FC = () => {
                             )}
                             <span className="truncate font-mono">{col.columnName}</span>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
-                            {col.dataType}
-                          </span>
+
+                          <div className="flex items-center space-x-1 text-[10px] text-slate-400 font-mono">
+                            <span>{col.dataType}</span>
+                          </div>
                         </div>
                       );
                     })}
@@ -194,6 +210,15 @@ export const SchemaTreeExplorer: React.FC = () => {
           })
         )}
       </div>
+
+      {/* Quick Sample Modal */}
+      {quickSampleTable && (
+        <QuickSampleModal
+          isOpen={Boolean(quickSampleTable)}
+          tableName={quickSampleTable}
+          onClose={() => setQuickSampleTable(null)}
+        />
+      )}
     </aside>
   );
 };

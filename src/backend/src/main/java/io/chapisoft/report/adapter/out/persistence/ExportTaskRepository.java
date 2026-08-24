@@ -39,6 +39,16 @@ public class ExportTaskRepository {
         }
     }
 
+    public Optional<ExportTask> findByTaskCode(String taskCode) {
+        String sql = "SELECT * FROM RPT_EXPORT_TASKS WHERE TASK_CODE = :taskCode";
+        MapSqlParameterSource params = new MapSqlParameterSource("taskCode", taskCode);
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, params, rowMapper));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
     public List<ExportTask> findByTenantId(String tenantId) {
         String sql = "SELECT * FROM RPT_EXPORT_TASKS WHERE TENANT_ID = :tenantId ORDER BY ID DESC LIMIT 50";
         MapSqlParameterSource params = new MapSqlParameterSource("tenantId", tenantId);

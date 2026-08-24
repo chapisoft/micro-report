@@ -51,6 +51,11 @@ public class ReportTemplateService {
 
     @Transactional
     public ReportTemplateDto createTemplate(String tenantId, String createdBy, ReportTemplateDto dto) {
+        // Tự động Upsert nếu mẫu đã tồn tại trong Tenant để tránh lỗi DuplicateKeyException
+        if (dto.getTemplateCode() != null && templateRepository.findByTenantAndCode(tenantId, dto.getTemplateCode()).isPresent()) {
+            return updateTemplate(tenantId, dto.getTemplateCode(), dto);
+        }
+
         if (dto.getMode() == QueryMode.SQL && dto.getConfigJson() != null) {
             // Validate SQL an toàn nếu có nội dung query
             sqlSecurityAstValidator.validateSafeSql(dto.getConfigJson());

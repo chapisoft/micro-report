@@ -2,25 +2,30 @@
 
 import React, { useState } from "react";
 import {
-  AlertCircle,
+  Activity,
+  BarChart3,
+  CheckCircle2,
   Clock,
-  Download,
   Eye,
   FileSpreadsheet,
   Layers,
   Play,
   RotateCcw,
+  Table as TableIcon,
   X,
 } from "lucide-react";
+import { BiDashboardView } from "./bi/BiDashboardView";
+import { FriendlyErrorCard } from "./FriendlyErrorCard";
 import { useReportBuilderStore } from "../model/useReportBuilderStore";
 import { t } from "../../../shared/locales";
 
 interface LiveDataPreviewTableProps {
   onOpenExportModal?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
-  onOpenExportModal,
+  onOpenAuth,
 }) => {
   const {
     previewData,
@@ -30,6 +35,7 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
     clearPreview,
   } = useReportBuilderStore();
 
+  const [activeTab, setActiveTab] = useState<"TABLE" | "BI">("TABLE");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [activeDetailRow, setActiveDetailRow] = useState<Record<string, any> | null>(null);
 
@@ -59,14 +65,15 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
     selectedRows.size === previewData.rows.length;
 
   return (
-    <div className="h-72 flex flex-col bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      {/* Table Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+    <div className="h-80 flex flex-col bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      {/* Table & BI View Toolbar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shrink-0">
         <div className="flex items-center space-x-3">
+          {/* Main Action Button: Run Preview */}
           <button
             onClick={runPreview}
             disabled={isLoadingPreview}
-            className="flex items-center space-x-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition-all active:scale-95"
+            className="flex items-center space-x-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             {isLoadingPreview ? (
               <div className="animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full" />
@@ -76,60 +83,67 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
             <span>{t("builder.runQuery")}</span>
           </button>
 
-          {previewData && (
-            <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
-              <span className="flex items-center space-x-1">
-                <Clock className="w-3.5 h-3.5 text-blue-500" />
-                <span>{previewData.executionTimeMs}ms</span>
-              </span>
-              <span>•</span>
-              <span className="flex items-center space-x-1">
-                <Layers className="w-3.5 h-3.5 text-purple-500" />
-                <span>{previewData.rows.length} {t("preview.rowCount")}</span>
-              </span>
-            </div>
-          )}
+          {/* Tab Switcher: [ 📋 Bảng Số Liệu ] vs [ 📊 Trực Quan BI ] */}
+          <div className="flex items-center bg-slate-200/70 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setActiveTab("TABLE")}
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                activeTab === "TABLE"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>{t("bi.tabTable")}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("BI")}
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                activeTab === "BI"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>{t("bi.tabDashboard")}</span>
+            </button>
+          </div>
         </div>
 
+        {/* Clear / Reset action */}
         <div className="flex items-center space-x-2">
           {previewData && (
             <button
               onClick={clearPreview}
-              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title={t("common.cancel")}
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           )}
-
-          {onOpenExportModal && (
-            <button
-              onClick={onOpenExportModal}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all active:scale-95"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{t("export.title")}</span>
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Error Message Banner */}
+      {/* Friendly Error State Card */}
       {errorMessage && (
-        <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span className="font-mono">{errorMessage}</span>
+        <div className="shrink-0">
+          <FriendlyErrorCard
+            errorMessage={errorMessage}
+            onRetry={runPreview}
+            onOpenAuth={onOpenAuth}
+          />
         </div>
       )}
 
-      {/* Main DataTable (Tuân thủ thứ tự cột: Checkbox -> STT -> Thao tác -> Dữ liệu) */}
+      {/* Main Content: Table or BI Dashboard */}
       <div className="flex-1 overflow-auto">
-        {!previewData ? (
+        {activeTab === "BI" && previewData ? (
+          <BiDashboardView data={previewData.rows} columns={previewData.columns} />
+        ) : !previewData ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2">
             <FileSpreadsheet className="w-8 h-8 text-slate-300 dark:text-slate-700" />
-            <p className="text-xs">
-              {t("preview.emptyRowsHint")}
-            </p>
+            <p className="text-xs">{t("preview.emptyRowsHint")}</p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse text-xs">
@@ -149,7 +163,7 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
                 {/* 2. Cột STT */}
                 <th className="w-14 px-3 py-2 text-center font-mono">{t("common.orderNumber")}</th>
 
-                {/* 3. Cột Thao tác / Hành động */}
+                {/* 3. Cột Thao tác */}
                 <th className="w-20 px-3 py-2 text-center">{t("common.actions")}</th>
 
                 {/* 4. Các cột dữ liệu */}
@@ -192,7 +206,7 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
                       {idx + 1}
                     </td>
 
-                    {/* 3. Thao tác / Hành động */}
+                    {/* 3. Thao tác */}
                     <td className="px-3 py-2 text-center">
                       <button
                         title={t("common.detail")}
@@ -214,6 +228,8 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
                           {val !== null && val !== undefined
                             ? typeof val === "object"
                               ? JSON.stringify(val)
+                              : typeof val === "number"
+                              ? new Intl.NumberFormat("vi-VN").format(val)
                               : String(val)
                             : <span className="text-slate-300 dark:text-slate-600 italic">null</span>}
                         </td>
@@ -225,6 +241,36 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* Footer: Status Bar UX Enhancement */}
+      <div className="px-4 py-2 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono shrink-0">
+        <div className="flex items-center space-x-4">
+          {previewData ? (
+            <>
+              <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{previewData.rows.length} {t("preview.rowCount")}</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center space-x-1">
+                <Clock className="w-3.5 h-3.5 text-blue-500" />
+                <span>{previewData.executionTimeMs} ms</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center space-x-1 text-slate-400">
+                <Activity className="w-3.5 h-3.5 text-purple-500" />
+                <span>{previewData.columns.length} cột</span>
+              </span>
+            </>
+          ) : (
+            <span>Sẵn sàng thực thi truy vấn</span>
+          )}
+        </div>
+
+        <div className="text-[11px] text-slate-400">
+          Phím tắt: <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">Ctrl + Enter</kbd> chạy truy vấn
+        </div>
       </div>
 
       {/* Row Detail View Modal */}

@@ -62,8 +62,7 @@ public class ReportExportController {
     @Operation(summary = "Tải file báo cáo theo Task Code")
     @GetMapping("/download/{taskCode}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String taskCode) {
-        String tenantId = TenantContext.getTenantIdOrDefault();
-        ExportTask task = exportTaskRepository.findByTenantAndTaskCode(tenantId, taskCode)
+        ExportTask task = exportTaskRepository.findByTaskCode(taskCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tiến trình xuất file: " + taskCode));
 
         File file = new File(task.getFilePath());

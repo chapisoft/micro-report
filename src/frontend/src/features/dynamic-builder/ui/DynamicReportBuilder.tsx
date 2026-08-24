@@ -294,6 +294,7 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
           {mode === "GUI" ? <VisualGuiBuilder /> : <MonacoSqlEditor />}
           <LiveDataPreviewTable
             onOpenExportModal={() => setIsExportModalOpen(true)}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
           />
         </main>
       </div>

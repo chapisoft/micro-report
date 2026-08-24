@@ -188,3 +188,36 @@ export interface ExportTask {
   createdBy: string;
   downloadUrl?: string;
 }
+
+export enum ChartType {
+  BAR = "BAR",
+  LINE = "LINE",
+  PIE = "PIE",
+  KPI = "KPI",
+  TABLE = "TABLE",
+}
+
+export interface ColumnMetadataDto {
+  columnName: string;
+  dataType: string;
+  label?: string;
+  isNumeric?: boolean;
+  isDate?: boolean;
+  format?: "CURRENCY" | "NUMBER" | "DATE" | "PERCENT" | "TEXT";
+}
+
+export interface ReportVisualConfigDto {
+  chartType: ChartType;
+  xAxisColumn?: string;
+  yAxisColumns?: string[];
+  categoryColumn?: string;
+  valueColumn?: string;
+  kpiTitle?: string;
+  kpiSubtitle?: string;
+  kpiValueColumn?: string;
+  kpiAggregation?: "SUM" | "COUNT" | "AVG" | "MAX" | "MIN";
+  kpiFormat?: "CURRENCY" | "NUMBER" | "PERCENT";
+  showLegend?: boolean;
+  showGrid?: boolean;
+  colorPalette?: string[];
+}
