@@ -14,7 +14,7 @@
 ## 3. Source Control Rules (Kiểm Soát Mã Nguồn)
 1. **DO NOT auto-commit code:** Tuyệt đối không tự ý chạy `git add` hoặc `git commit` khi chưa có yêu cầu rõ ràng từ người dùng.
 2. **Bắt buộc review `git diff` trước khi commit:** Luôn kiểm tra kỹ diff để đảm bảo không xóa nhầm code thật hay chèn code rác.
-3. **Git Workflow:** Tạo nhánh tính năng từ `main` (`feature/MR-<ticket>-<desc>`), test hoàn chỉnh trước khi tạo MR.
+3. **Git Workflow:** Làm việc trực tiếp trên nhánh `main` (Trunk-based / Single Branch Workflow, không sử dụng Git Flow). Kiểm định `./scripts/local_ci.sh` đạt 100% PASS trước khi commit/push.
 
 ---
 

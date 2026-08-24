@@ -47,18 +47,12 @@ pipeline {
             steps {
                 script {
                     env.IMAGE_TAG = sh(script: 'git rev-parse --short HEAD 2>/dev/null || echo "latest"', returnStdout: true).trim()
-
-                    switch (env.BRANCH_NAME) {
-                        case 'main':
-                            env.TARGET_ENV = 'PRODUCTION'
-                            break
-                        case 'develop':
-                            env.TARGET_ENV = 'DEV'
-                            break
-                        default:
-                            env.TARGET_ENV = env.BRANCH_NAME ?: 'BRANCH'
-                            break
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: sh(script: 'git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main"', returnStdout: true).trim()
+                    if (branchName.startsWith('origin/')) {
+                        branchName = branchName.substring(7)
                     }
+                    env.BRANCH_NAME = branchName
+                    env.TARGET_ENV  = 'PRODUCTION'
 
                     def backendChanged  = false
                     def frontendChanged = false

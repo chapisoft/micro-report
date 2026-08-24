@@ -167,7 +167,7 @@ Hệ thống được thiết lập pipeline tự động hóa hoàn toàn với
 flowchart LR
     subgraph S_SRC ["NGUỒN MÃ & PHÂN TÍCH"]
         direction TB
-        GitPush["GitHub Push Event<br/>• Nhánh main (Production)<br/>• Nhánh develop (Dev)<br/>• Quét định kỳ PollSCM 2 phút"]
+        GitPush["GitHub Push Event<br/>• Nhánh main trực tiếp<br/>• Quét định kỳ PollSCM 2 phút"]
         DetectScope["Detect Changes & Scope<br/>• src/backend → report-backend<br/>• src/frontend → report-frontend<br/>• deploy/ → build toàn bộ"]
         GitPush --> DetectScope
     end

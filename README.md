@@ -180,7 +180,7 @@ Hệ thống được tích hợp quy trình CI/CD tự động hóa hoàn toàn
 flowchart LR
     subgraph S_SRC ["MÃ NGUỒN & KÍCH HOẠT"]
         direction TB
-        GitPush["GitHub Push / Webhook<br/>• Nhánh main & develop<br/>• PollSCM 2 phút dự phòng"]
+        GitPush["GitHub Push / Webhook<br/>• Nhánh main trực tiếp<br/>• PollSCM 2 phút dự phòng"]
         SmartDetect["Smart Change Detection<br/>• Phân tích diff commit<br/>• Bỏ qua nếu chỉ đổi docs/plan"]
         GitPush --> SmartDetect
     end
