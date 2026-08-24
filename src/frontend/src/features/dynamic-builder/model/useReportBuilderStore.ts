@@ -315,7 +315,8 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
             expr = `${col.aggregation}(${colFull})`;
           }
           if (col.alias && col.alias !== col.columnName) {
-            expr += ` AS ${col.alias}`;
+            const cleanAlias = col.alias.trim().replace(/"/g, "");
+            expr += ` AS "${cleanAlias}"`;
           }
           return expr;
         })
@@ -392,8 +393,6 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
       const groupExprs = nonAggCols.map((c) => `${c.tableName}.${c.columnName}`);
       sql += `\nGROUP BY ${groupExprs.join(", ")}`;
     }
-
-    sql += `\nLIMIT ${guiConfig.limit || 50}`;
 
     set({ sqlQuery: sql });
     return sql;

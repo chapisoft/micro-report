@@ -36,6 +36,9 @@ dependencies {
     implementation 'net.javacrumbs.shedlock:shedlock-spring:5.13.0'
     implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.13.0'
 
+    // Rate Limiting (Bucket4j)
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+
     // SQL Security AST Parser
     implementation 'com.github.jsqlparser:jsqlparser:4.9'
 

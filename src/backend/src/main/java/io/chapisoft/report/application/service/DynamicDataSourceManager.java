@@ -3,6 +3,7 @@ package io.chapisoft.report.application.service;
 import io.chapisoft.report.adapter.out.persistence.DataSourceRepository;
 import io.chapisoft.report.domain.exception.ResourceNotFoundException;
 import io.chapisoft.report.domain.model.DataSourceConfig;
+import io.chapisoft.report.domain.model.DatabaseType;
 import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.security.AesEncryptionService;
 
@@ -27,7 +28,7 @@ public class DynamicDataSourceManager {
     private final Map<String, HikariDataSource> connectionPools = new ConcurrentHashMap<>();
 
     public DynamicDataSourceManager(DataSourceRepository dataSourceRepository,
-                                  AesEncryptionService aesEncryptionService) {
+            AesEncryptionService aesEncryptionService) {
         this.dataSourceRepository = dataSourceRepository;
         this.aesEncryptionService = aesEncryptionService;
     }
@@ -38,7 +39,15 @@ public class DynamicDataSourceManager {
     }
 
     public NamedParameterJdbcTemplate getJdbcTemplate(String tenantId, String datasourceCode) {
-        return new NamedParameterJdbcTemplate(Objects.requireNonNull(getDataSource(tenantId, datasourceCode)));
+        NamedParameterJdbcTemplate namedJdbcTemplate = new NamedParameterJdbcTemplate(Objects.requireNonNull(getDataSource(tenantId, datasourceCode)));
+        namedJdbcTemplate.getJdbcTemplate().setQueryTimeout(ReportConstants.DEFAULT_STATEMENT_TIMEOUT_SECONDS);
+        return namedJdbcTemplate;
+    }
+
+    public DatabaseType getDatabaseType(String tenantId, String datasourceCode) {
+        return dataSourceRepository.findByTenantAndCode(tenantId, datasourceCode)
+                .map(DataSourceConfig::getDbType)
+                .orElse(null);
     }
 
     private HikariDataSource createHikariDataSource(String tenantId, String datasourceCode) {
@@ -54,7 +63,8 @@ public class DynamicDataSourceManager {
         hikariConfig.setJdbcUrl(config.getJdbcUrl());
         hikariConfig.setUsername(config.getUsername());
         hikariConfig.setPassword(aesEncryptionService.decrypt(config.getPasswordEncrypted()));
-        hikariConfig.setMaximumPoolSize(config.getMaxPoolSize() != null ? config.getMaxPoolSize() : ReportConstants.DEFAULT_HIKARI_MAX_POOL_SIZE_FALLBACK);
+        hikariConfig.setMaximumPoolSize(config.getMaxPoolSize() != null ? config.getMaxPoolSize()
+                : ReportConstants.DEFAULT_HIKARI_MAX_POOL_SIZE_FALLBACK);
         hikariConfig.setMinimumIdle(ReportConstants.DEFAULT_HIKARI_MIN_IDLE);
         hikariConfig.setConnectionTimeout(ReportConstants.DEFAULT_HIKARI_CONNECTION_TIMEOUT_MS);
         hikariConfig.setValidationTimeout(ReportConstants.DEFAULT_HIKARI_VALIDATION_TIMEOUT_MS);
