@@ -19,12 +19,12 @@
    * **Chế độ No-Code (Visual GUI Builder):** Kéo thả trường dữ liệu, Visual Join Builder, bộ lọc phân cấp `AND`/`OR`, nút 1-click `Convert GUI to SQL`.
    * **Chế độ Low-Code (Monaco SQL Query Editor):** Soạn thảo SQL chuẩn VS Code, hỗ trợ CTE, Window Functions, nhúng tham số động `{{params.var}}` và hàm biến đổi dữ liệu JavaScript hậu kỳ.
 4. **Màn Hình Chạy Báo Cáo Chuyên Dụng (Standalone Report Viewer):**
-   * Dành riêng cho Người Dùng Cuối (Kế toán, Quản lý, Giao dịch viên) với form nhập tham số động, bảng dữ liệu chuẩn 4 cột (`Checkbox` $\rightarrow$ `STT` $\rightarrow$ `Thao tác` $\rightarrow$ `Dữ liệu`), ẩn hoàn toàn mã SQL.
+   * Dành riêng cho Người Dùng Cuối (Kế toán, Quản lý, Giao dịch viên) với form nhập tham số động, bảng dữ liệu chuẩn 4 cột (`Checkbox` -> `STT` -> `Thao tác` -> `Dữ liệu`), ẩn hoàn toàn mã SQL.
 5. **Bảo Mật & An Toàn Tuyệt Đối:**
    * `JSqlParser` AST Sandbox chặn 100% các câu lệnh DML/DDL (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`).
    * Bắt buộc kết nối CSDL ở chế độ `isReadOnly = true` và mã hóa mật khẩu AES-256.
 6. **Hiệu Năng Xuất Dữ Liệu Lớn (SXSSF Streaming):**
-   * Trích xuất file Excel (`.xlsx`) tới 100.000 dòng với RAM footprint $< 50\text{MB}$ nhờ Apache POI SXSSF Window 500 dòng.
+   * Trích xuất file Excel (`.xlsx`) tới 100.000 dòng với RAM footprint < 50MB nhờ Apache POI SXSSF Window 500 dòng.
 7. **Đồng Bộ Menu Xuất Bản Tự Động (Published Menu Sync API):**
    * Cho phép Admin hệ sinh thái xuất bản mẫu báo cáo thành các menu con độc lập trên Sidebar của DIP Platform hoặc Micro-CRM.
 
@@ -119,8 +119,8 @@ git pull origin main
 3. Tự động áp dụng các bản di trú Flyway `V1` và `V2` (seed sẵn kết nối CSDL và mẫu báo cáo cho **DIP** và **MICRO-CRM**).
 4. Khởi chạy cụm 3 containers với cấu hình limits an toàn:
    * `micro-report-metadata-db` (Port 5432 Internal)
-   * `micro-report-backend` (Port 8088:8080 $\rightarrow$ `rpe.microtec.vn`)
-   * `micro-report-frontend` (Port 3008:3000 $\rightarrow$ `rpf.microtec.vn`)
+   * `micro-report-backend` (Port 8088:8080 → `rpe.microtec.vn`)
+   * `micro-report-frontend` (Port 3008:3000 → `rpf.microtec.vn`)
 
 ---
 
@@ -172,6 +172,58 @@ docker exec -it gateway_stack_nginx nginx -s reload
 
 ---
 
+## 🔄 QUY TRÌNH CI/CD & JENKINS PIPELINE
+
+Hệ thống được tích hợp quy trình CI/CD tự động hóa hoàn toàn với máy chủ Jenkins (`210.211.102.99`), đồng bộ chuẩn với các phân hệ `micro-crm` và `micro-loyalty`:
+
+```mermaid
+flowchart LR
+    subgraph S_SRC ["MÃ NGUỒN & KÍCH HOẠT"]
+        direction TB
+        GitPush["GitHub Push / Webhook<br/>• Nhánh main trực tiếp<br/>• PollSCM 2 phút dự phòng"]
+        SmartDetect["Smart Change Detection<br/>• Phân tích diff commit<br/>• Bỏ qua nếu chỉ đổi docs/plan"]
+        GitPush --> SmartDetect
+    end
+
+    subgraph S_BUILD ["BUILD SONG SONG"]
+        direction TB
+        BE_Build["☕ Build Backend Engine<br/>• Java 21 & Gradle bootJar<br/>• Caching & Unit Tests"]
+        FE_Build["🖥️ Build Frontend Web<br/>• Node 20 & Next.js 14<br/>• Standalone Packaging"]
+        MigrationCheck["🛡️ DB Migration Check<br/>• Quét an toàn SQL Flyway<br/>• Chặn lệnh DDL phá hủy"]
+        MigrationCheck --> BE_Build
+        MigrationCheck --> FE_Build
+    end
+
+    subgraph S_DEPLOY ["TRIỂN KHAI & GIÁM SÁT"]
+        direction TB
+        DockerDeploy["🐳 Deploy & Rolling Update<br/>• Docker Compose dip-network<br/>• Cập nhật container không gián đoạn"]
+        HealthCheck["🔍 Health Check Verification<br/>• Kiểm tra /actuator/health<br/>• Kiểm tra cổng 8088 & 3008"]
+        TelegramAlert["📢 Thông Báo Telegram 100%<br/>• Success / Failure / Aborted<br/>• Kèm commit, branch & domain"]
+        DockerDeploy --> HealthCheck
+        HealthCheck --> TelegramAlert
+    end
+
+    SmartDetect --> MigrationCheck
+    BE_Build --> DockerDeploy
+    FE_Build --> DockerDeploy
+```
+
+### Các Tham Số Build Trên Jenkins
+* `TARGET_SERVICE`: Chọn phân hệ cần đóng gói (`all`, `report-backend`, `report-frontend`).
+* `SKIP_TESTS`: Bỏ qua kiểm thử đơn vị khi cần hotfix khẩn cấp (mặc định: `false`).
+
+### Tiện Ích Dòng Lệnh Hỗ Trợ
+* **Gửi thông báo Telegram:**
+  ```bash
+  ./scripts/notify_telegram.sh "Nội dung thông báo" "SUCCESS|FAILED|WARNING|INFO"
+  ```
+* **Kiểm tra sức khỏe dịch vụ:**
+  ```bash
+  ./scripts/check_health.sh 8088 3008
+  ```
+
+---
+
 ## 📦 SEED DATA CÓ SẴN TRÊN CƠ SỞ DỮ LIỆU
 
 Hệ thống đã được nạp sẵn cấu hình DataSource và Mẫu báo cáo thực tế cho các hệ thống:
@@ -209,15 +261,20 @@ micro-report/
 │   ├── frontend/                           # Next.js 14 Standalone Web & Iframe App
 │   └── sdk/                                # Reusable React NPM Component Package
 ├── deploy/                                 # Cấu hình Docker Compose, Dockerfiles & Runbook
+│   ├── ci-cd/jenkins/Jenkinsfile           # Cấu hình Jenkins Pipeline dự phòng
 │   ├── docker-compose.yml                  # Docker Compose cho môi trường Local
 │   ├── docker-compose.dip.yml              # Docker Compose cho máy chủ DIP
 │   ├── Dockerfile.backend                  # Dockerfile tối ưu Spring Boot 3
 │   ├── Dockerfile.frontend                 # Dockerfile tối ưu Next.js Standalone
 │   ├── deploy_dip.sh                       # Script tự động hóa deploy lên server DIP
-│   └── DEPLOYMENT_PLAN_DIP.md              # Kế hoạch triển khai & kịch bản smoke tests
+│   ├── DEPLOYMENT_PLAN_DIP.md              # Kế hoạch triển khai & kịch bản smoke tests
+│   └── nginx/host-report-vhost.conf        # Cấu hình Reverse Proxy Nginx Gateway
 ├── scripts/
+│   ├── check_health.sh                     # Script kiểm tra sức khỏe backend & frontend
 │   ├── export_docx.js                      # Script xuất tài liệu Markdown sang Docx
-│   └── local_ci.sh                         # Script kiểm thử chất lượng trước khi commit
+│   ├── local_ci.sh                         # Script kiểm thử chất lượng trước khi commit
+│   └── notify_telegram.sh                  # Script gửi thông báo Telegram
+├── Jenkinsfile                             # Jenkins Declarative CI/CD Pipeline
 ├── package.json                            # Root Monorepo Scripts
 └── README.md
 ```

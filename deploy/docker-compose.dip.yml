@@ -1,3 +1,4 @@
+name: micro-report
 version: '3.8'
 
 services:
@@ -11,7 +12,7 @@ services:
       POSTGRES_USER: report_admin
       POSTGRES_PASSWORD: ${REPORT_DB_PASSWORD:-report_secure_pwd_2026}
     volumes:
-      - /home/dip/data/report_metadata_db:/var/lib/postgresql/data
+      - report_metadata_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U report_admin -d report_meta_db"]
       interval: 5s
@@ -39,8 +40,7 @@ services:
       REPORT_SECURITY_AES_SECRET_KEY: ${REPORT_AES_KEY:-MascomReportEngineSecureSecretKey2026!#}
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
     ports:
-      - "127.0.0.1:8088:8080"
-      - "172.18.0.1:8088:8080"
+      - "8088:8080"
     depends_on:
       report-metadata-db:
         condition: service_healthy
@@ -60,8 +60,7 @@ services:
     container_name: micro-report-frontend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3008:3000"
-      - "172.18.0.1:3008:3000"
+      - "3008:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -76,6 +75,9 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
+
+volumes:
+  report_metadata_db_data:
 
 networks:
   dip-net:
