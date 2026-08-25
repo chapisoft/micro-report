@@ -67,3 +67,11 @@ lerna-debug.log*
 coverage/
 **/coverage/
 .nyc_output/
+
+# Temporary Export Files
+**/temp_exports/
+temp_exports/
+*.xlsx
+*.csv
+*.pdf
+!**/temp_exports/.gitkeep
