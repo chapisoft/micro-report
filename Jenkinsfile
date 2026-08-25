@@ -131,6 +131,7 @@ pipeline {
         stage('1. 🛡️ DB Migration Safety Check') {
             when { expression { env.SKIP_PIPELINE != 'true' } }
             steps {
+                script {
                     def changedFilesRaw = sh(script: 'git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true', returnStdout: true).trim()
                     def changedFiles = changedFilesRaw ? changedFilesRaw.split('\n').collect { it.trim() }.findAll { it } : []
                     def migrationFiles = changedFiles.findAll { it.contains('db/migration/') && it.endsWith('.sql') && fileExists(it) }
