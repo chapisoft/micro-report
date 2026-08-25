@@ -106,6 +106,18 @@ public class ReportTemplateService {
     }
 
     @Transactional
+    public ReportTemplateDto publishTemplate(String tenantId, String templateCode) {
+        ReportTemplate existing = templateRepository.findByTenantAndCode(tenantId, templateCode)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy mẫu báo cáo với mã: " + templateCode + " để xuất bản."));
+        existing.setIsPublic(true);
+        existing.setStatus(TemplateStatus.ACTIVE);
+        existing.setUpdatedAt(Instant.now());
+        templateRepository.update(existing);
+        return mapToDto(existing);
+    }
+
+    @Transactional
     public void deleteTemplate(String tenantId, String templateCode) {
         templateRepository.findByTenantAndCode(tenantId, templateCode)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -131,6 +143,9 @@ public class ReportTemplateService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .createdBy(entity.getCreatedBy())
+                .menuPath(ReportConstants.DEFAULT_MENU_PATH_PREFIX + entity.getTemplateCode())
+                .menuCategory(ReportConstants.DEFAULT_MENU_CATEGORY)
+                .menuIcon(ReportConstants.DEFAULT_MENU_ICON)
                 .build();
     }
 }

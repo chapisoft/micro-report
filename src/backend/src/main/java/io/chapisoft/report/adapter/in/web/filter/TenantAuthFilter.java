@@ -23,7 +23,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -61,6 +64,8 @@ public class TenantAuthFilter extends OncePerRequestFilter {
             String userId = ReportConstants.CREATED_BY_SYSTEM;
             String userName = ReportConstants.DEFAULT_SYSTEM_USER_NAME;
             HashSet<String> roles = new HashSet<>();
+            Map<String, Object> dataScope = new LinkedHashMap<>();
+            Set<String> allowedDataSources = new HashSet<>();
 
             String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
             String headerTenantId = request.getHeader(ReportConstants.HEADER_TENANT_ID);
@@ -110,6 +115,37 @@ public class TenantAuthFilter extends OncePerRequestFilter {
                     if (roleList != null) {
                         roles.addAll(roleList);
                     }
+
+                    // Trích xuất data_scope từ JWT (nếu có)
+                    Object scopeObj = claims.get(ReportConstants.CLAIM_DATA_SCOPE);
+                    if (scopeObj instanceof Map<?, ?> scopeMap) {
+                        for (Map.Entry<?, ?> entry : scopeMap.entrySet()) {
+                            if (entry.getKey() != null && entry.getValue() != null) {
+                                String k = entry.getKey().toString();
+                                String v = entry.getValue().toString();
+                                if (!ReportConstants.SCOPE_ALL.equalsIgnoreCase(v)) {
+                                    dataScope.put(k, entry.getValue());
+                                }
+                            }
+                        }
+                    }
+
+                    String branchClaim = claims.get(ReportConstants.CLAIM_BRANCH_ID, String.class);
+                    if (branchClaim != null && !branchClaim.trim().isEmpty() && !ReportConstants.SCOPE_ALL.equalsIgnoreCase(branchClaim.trim())) {
+                        dataScope.put(ReportConstants.SCOPE_BRANCH_ID, branchClaim.trim());
+                    }
+
+                    String provClaim = claims.get(ReportConstants.CLAIM_PROVINCE_CODE, String.class);
+                    if (provClaim != null && !provClaim.trim().isEmpty() && !ReportConstants.SCOPE_ALL.equalsIgnoreCase(provClaim.trim())) {
+                        dataScope.put(ReportConstants.SCOPE_PROVINCE_CODE, provClaim.trim());
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    List<String> allowedList = claims.get(ReportConstants.CLAIM_ALLOWED_DATASOURCES, List.class);
+                    if (allowedList != null) {
+                        allowedDataSources.addAll(allowedList);
+                    }
+
                 } catch (Exception e) {
                     log.warn("JWT validation failed: {}", e.getMessage());
                 }
@@ -135,6 +171,31 @@ public class TenantAuthFilter extends OncePerRequestFilter {
                 }
             }
 
+            // Trích xuất Data Scope từ HTTP Header nếu chưa có từ Token
+            String headerBranchId = request.getHeader(ReportConstants.HEADER_BRANCH_ID);
+            if (headerBranchId == null) headerBranchId = request.getParameter("branch_id");
+            if (headerBranchId != null && !headerBranchId.trim().isEmpty() && !ReportConstants.SCOPE_ALL.equalsIgnoreCase(headerBranchId.trim())) {
+                dataScope.put(ReportConstants.SCOPE_BRANCH_ID, headerBranchId.trim());
+            }
+
+            String headerProvince = request.getHeader(ReportConstants.HEADER_PROVINCE_CODE);
+            if (headerProvince == null) headerProvince = request.getParameter("province_code");
+            if (headerProvince != null && !headerProvince.trim().isEmpty() && !ReportConstants.SCOPE_ALL.equalsIgnoreCase(headerProvince.trim())) {
+                dataScope.put(ReportConstants.SCOPE_PROVINCE_CODE, headerProvince.trim());
+            }
+
+            // Trích xuất Allowed DataSources từ HTTP Header nếu chưa có từ Token
+            String headerAllowed = request.getHeader(ReportConstants.HEADER_ALLOWED_DATASOURCES);
+            if (headerAllowed == null) headerAllowed = request.getParameter("listDatasource");
+            if (headerAllowed == null) headerAllowed = request.getParameter("allowedCodes");
+            if (headerAllowed != null && !headerAllowed.trim().isEmpty() && !ReportConstants.FILTER_ALL.equalsIgnoreCase(headerAllowed.trim())) {
+                for (String ds : headerAllowed.split(",")) {
+                    if (ds != null && !ds.trim().isEmpty()) {
+                        allowedDataSources.add(ds.trim());
+                    }
+                }
+            }
+
             // 3. Kiểm tra bắt buộc thông tin đối tác (Chặn 401 nếu không có thông tin xác thực)
             if (tenantId == null) {
                 if (allowAnonymous) {
@@ -152,6 +213,8 @@ public class TenantAuthFilter extends OncePerRequestFilter {
                     .userId(userId)
                     .userName(userName)
                     .roles(roles.isEmpty() ? Collections.singleton(ReportConstants.DEFAULT_ROLE_USER) : roles)
+                    .dataScope(dataScope)
+                    .allowedDataSources(allowedDataSources)
                     .build();
 
             TenantContext.set(context);
