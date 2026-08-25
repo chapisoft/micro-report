@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CheckCircle,
   Download,
@@ -41,6 +41,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [exportResult, setExportResult] = useState<ExportTask | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setExportResult(null);
+      setErrorMessage(null);
+      setIsDownloading(false);
+    }
+  }, [isOpen]);
 
   const handleDownloadFile = async () => {
     if (!exportResult) return;
@@ -220,6 +228,26 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 )}
                 <span>{isDownloading ? t("common.download") + "..." : t("export.downloadNow")}</span>
               </button>
+
+              <div className="flex items-center space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportResult(null);
+                    setErrorMessage(null);
+                  }}
+                  className="flex-1 py-1.5 px-3 border border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Xuất file khác
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="py-1.5 px-3 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  {t("common.close")}
+                </button>
+              </div>
             </div>
           )}
         </div>
