@@ -45,14 +45,27 @@ public class SchemaExplorerService {
             String catalog = conn.getCatalog();
             String schema = conn.getSchema();
 
+            // Đối với Oracle, schema là UPPERCASE username để tránh quét toàn bộ bảng hệ thống SYS/SYSTEM
+            if (config.getDbType() != null && config.getDbType().name().equalsIgnoreCase("ORACLE")) {
+                catalog = null;
+                if (schema == null || schema.isEmpty()) {
+                    schema = config.getUsername() != null ? config.getUsername().toUpperCase() : null;
+                }
+            }
+
             try (ResultSet rsTables = metaData.getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"})) {
                 while (rsTables.next()) {
                     String tableName = rsTables.getString("TABLE_NAME");
                     String tableType = rsTables.getString("TABLE_TYPE");
                     String remarks = rsTables.getString("REMARKS");
 
-                    // Bỏ qua các bảng hệ thống
-                    if (tableName.startsWith("pg_") || tableName.startsWith("sql_") || tableName.equalsIgnoreCase("information_schema")) {
+                    if (tableName == null) continue;
+
+                    // Bỏ qua các bảng hệ thống PostgreSQL / Oracle RecycleBin
+                    if (tableName.startsWith("pg_") || tableName.startsWith("sql_")
+                            || tableName.startsWith("BIN$") || tableName.startsWith("SYS_")
+                            || tableName.startsWith("OGG$") || tableName.startsWith("AQ$")
+                            || tableName.equalsIgnoreCase("information_schema")) {
                         continue;
                     }
 

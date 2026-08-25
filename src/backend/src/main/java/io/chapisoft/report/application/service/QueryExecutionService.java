@@ -3,11 +3,14 @@ package io.chapisoft.report.application.service;
 import io.chapisoft.report.application.dto.QueryPreviewRequest;
 import io.chapisoft.report.application.dto.QueryPreviewResponse;
 import io.chapisoft.report.domain.exception.ReportEngineException;
+import io.chapisoft.report.domain.model.DatabaseType;
 import io.chapisoft.report.domain.model.QueryMode;
 import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.security.BoundSql;
 import io.chapisoft.report.domain.security.DynamicParameterBinder;
 import io.chapisoft.report.domain.security.SqlSecurityAstValidator;
+import io.chapisoft.report.domain.security.dialect.DatabaseDialect;
+import io.chapisoft.report.domain.security.dialect.DatabaseDialectFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,15 +32,18 @@ public class QueryExecutionService {
     private final DynamicDataSourceManager dataSourceManager;
     private final SqlSecurityAstValidator sqlSecurityAstValidator;
     private final DynamicParameterBinder parameterBinder;
+    private final DatabaseDialectFactory dialectFactory;
     private final ObjectMapper objectMapper;
 
     public QueryExecutionService(DynamicDataSourceManager dataSourceManager,
-                                 SqlSecurityAstValidator sqlSecurityAstValidator,
-                                 DynamicParameterBinder parameterBinder,
-                                 ObjectMapper objectMapper) {
+            SqlSecurityAstValidator sqlSecurityAstValidator,
+            DynamicParameterBinder parameterBinder,
+            DatabaseDialectFactory dialectFactory,
+            ObjectMapper objectMapper) {
         this.dataSourceManager = dataSourceManager;
         this.sqlSecurityAstValidator = sqlSecurityAstValidator;
         this.parameterBinder = parameterBinder;
+        this.dialectFactory = dialectFactory;
         this.objectMapper = objectMapper;
     }
 
@@ -64,13 +70,18 @@ public class QueryExecutionService {
         // 2. Chuyển đổi tham số động {{params.var}} thành Named Parameters :param_var
         BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
-        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng)
-        int limit = (request.getLimit() != null && request.getLimit() > 0 && request.getLimit() <= ReportConstants.MAX_PREVIEW_LIMIT) 
-                ? request.getLimit() : ReportConstants.DEFAULT_PREVIEW_LIMIT;
-        
-        String limitedSql = "SELECT * FROM (" + boundSql.sql() + ") AS preview_wrapper LIMIT " + limit;
+        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng) qua DatabaseDialect
+        int limit = (request.getLimit() != null && request.getLimit() > 0
+                && request.getLimit() <= ReportConstants.MAX_PREVIEW_LIMIT)
+                        ? request.getLimit()
+                        : ReportConstants.DEFAULT_PREVIEW_LIMIT;
 
-        NamedParameterJdbcTemplate jdbcTemplate = dataSourceManager.getJdbcTemplate(tenantId, request.getDatasourceCode());
+        DatabaseType dbType = dataSourceManager.getDatabaseType(tenantId, request.getDatasourceCode());
+        DatabaseDialect dialect = dialectFactory.getDialect(dbType);
+        String limitedSql = dialect.wrapPagination(boundSql.sql(), limit, 0);
+
+        NamedParameterJdbcTemplate jdbcTemplate = dataSourceManager.getJdbcTemplate(tenantId,
+                request.getDatasourceCode());
 
         List<String> columns = new ArrayList<>();
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -118,7 +129,8 @@ public class QueryExecutionService {
             return "SELECT 1 AS status";
         }
         String trimmed = configJson.trim();
-        if (trimmed.startsWith("SELECT") || trimmed.startsWith("WITH") || trimmed.startsWith("select") || trimmed.startsWith("with")) {
+        if (trimmed.startsWith("SELECT") || trimmed.startsWith("WITH") || trimmed.startsWith("select")
+                || trimmed.startsWith("with")) {
             return trimmed;
         }
 
@@ -139,14 +151,16 @@ public class QueryExecutionService {
                     String agg = col.path("aggregation").asText(null);
                     String alias = col.path("alias").asText(null);
 
-                    if (i > 0) selectClause.append(", ");
+                    if (i > 0)
+                        selectClause.append(", ");
                     String colExpr = tbl + "." + colName;
                     if (agg != null && !agg.equalsIgnoreCase("NONE") && !agg.trim().isEmpty()) {
                         colExpr = agg + "(" + colExpr + ")";
                     }
                     selectClause.append(colExpr);
                     if (alias != null && !alias.trim().isEmpty() && !alias.equalsIgnoreCase(colName)) {
-                        selectClause.append(" AS ").append(alias);
+                        String cleanAlias = alias.trim().replace("\"", "");
+                        selectClause.append(" AS \"").append(cleanAlias).append("\"");
                     }
                 }
             } else {
@@ -193,13 +207,11 @@ public class QueryExecutionService {
                     } else if (fVal.startsWith("{{") && fVal.endsWith("}}")) {
                         sql.append(fTable).append(".").append(fCol).append(" ").append(fOp).append(" ").append(fVal);
                     } else {
-                        sql.append(fTable).append(".").append(fCol).append(" ").append(fOp).append(" '").append(fVal).append("'");
+                        sql.append(fTable).append(".").append(fCol).append(" ").append(fOp).append(" '").append(fVal)
+                                .append("'");
                     }
                 }
             }
-
-            int limit = root.path("limit").asInt(50);
-            sql.append("\nLIMIT ").append(limit);
 
             return sql.toString();
         } catch (Exception e) {
