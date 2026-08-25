@@ -47,4 +47,9 @@ public class ReportTemplateDto {
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;
+
+    // Menu Integration Metadata (CMS DIP / Micro-CRM)
+    private String menuPath;
+    private String menuCategory;
+    private String menuIcon;
 }

@@ -38,6 +38,7 @@ services:
       SPRING_DATASOURCE_USERNAME: report_admin
       SPRING_DATASOURCE_PASSWORD: ${REPORT_DB_PASSWORD:-report_secure_pwd_2026}
       REPORT_SECURITY_AES_SECRET_KEY: ${REPORT_AES_KEY:-MascomReportEngineSecureSecretKey2026!#}
+      DOCKER_HOST_GATEWAY: "172.18.0.1"
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
     ports:
       - "8088:8080"

@@ -67,6 +67,7 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     activeTemplate?.templateCode || `RPT_${Date.now()}`
   );
   const [isSaving, setIsSaving] = useState(false);
+  const isInitializedRef = React.useRef(false);
 
   useEffect(() => {
     // 1. Kiểm tra thông tin xác thực từ props hoặc localStorage
@@ -88,16 +89,20 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     setCurrentAuthToken(effectiveAuthToken);
     setIsAuthModalOpen(false);
 
-    initSession({
-      engineUrl,
-      tenantId: effectiveTenant,
-      authToken: effectiveAuthToken,
-      apiKey: effectiveApiKey,
-      theme,
-      defaultDatasourceCode,
-      allowedDatasources,
-      listDatasource,
-    });
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+      initSession({
+        engineUrl,
+        tenantId: effectiveTenant,
+        authToken: effectiveAuthToken,
+        apiKey: effectiveApiKey,
+        theme,
+        defaultDatasourceCode,
+        allowedDatasources,
+        listDatasource,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     engineUrl,
     tenantId,
@@ -105,9 +110,6 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     apiKey,
     theme,
     defaultDatasourceCode,
-    allowedDatasources,
-    listDatasource,
-    initSession,
   ]);
 
   const handleAuthenticate = async (credentials: {

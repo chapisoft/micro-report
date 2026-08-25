@@ -3,10 +3,13 @@ package io.chapisoft.report.application.service;
 import io.chapisoft.report.application.dto.QueryPreviewRequest;
 import io.chapisoft.report.application.dto.QueryPreviewResponse;
 import io.chapisoft.report.domain.exception.ReportEngineException;
+import io.chapisoft.report.domain.exception.SecurityViolationException;
 import io.chapisoft.report.domain.model.DatabaseType;
 import io.chapisoft.report.domain.model.QueryMode;
 import io.chapisoft.report.domain.model.ReportConstants;
+import io.chapisoft.report.domain.model.TenantContext;
 import io.chapisoft.report.domain.security.BoundSql;
+import io.chapisoft.report.domain.security.DataMaskingUtils;
 import io.chapisoft.report.domain.security.DynamicParameterBinder;
 import io.chapisoft.report.domain.security.SqlSecurityAstValidator;
 import io.chapisoft.report.domain.security.dialect.DatabaseDialect;
@@ -66,14 +69,22 @@ public class QueryExecutionService {
             throw new ReportEngineException("Câu lệnh truy vấn không được để trống.");
         }
 
+        // 0. Kiểm tra phân quyền truy cập DataSource theo phiên (listDatasource)
+        TenantContext ctx = TenantContext.get();
+        if (ctx != null && !ctx.getAllowedDataSources().isEmpty()) {
+            if (!ctx.getAllowedDataSources().contains(request.getDatasourceCode())) {
+                throw new SecurityViolationException("Truy cập bị từ chối: Nguồn dữ liệu '" 
+                        + request.getDatasourceCode() + "' không nằm trong danh sách được ủy quyền cho phiên làm việc này.");
+            }
+        }
+
         // 1. Phân tích an toàn qua JSqlParser AST Sandbox
         sqlSecurityAstValidator.validateSafeSql(rawSql);
 
-        // 2. Chuyển đổi tham số động {{params.var}} thành Named Parameters :param_var
+        // 2. Chuyển đổi tham số động {{params.var}} và {{scope.var}} thành Named Parameters
         BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
-        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng) qua
-        // DatabaseDialect
+        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng) qua DatabaseDialect
         int limit = (request.getLimit() != null && request.getLimit() > 0
                 && request.getLimit() <= ReportConstants.MAX_PREVIEW_LIMIT)
                         ? request.getLimit()
@@ -88,6 +99,7 @@ public class QueryExecutionService {
 
         List<String> columns = new ArrayList<>();
         List<Map<String, Object>> rows = new ArrayList<>();
+        boolean shouldMask = DataMaskingUtils.shouldMask(ctx);
 
         try {
             jdbcTemplate.query(limitedSql, Objects.requireNonNull(boundSql.parameterSource()), rs -> {
@@ -104,7 +116,11 @@ public class QueryExecutionService {
                     Map<String, Object> row = new LinkedHashMap<>();
                     for (int i = 1; i <= colCount; i++) {
                         String colName = metaData.getColumnLabel(i);
-                        row.put(colName, rs.getObject(i));
+                        Object val = extractSafeValue(rs, i);
+                        if (shouldMask) {
+                            val = DataMaskingUtils.maskValue(colName, val);
+                        }
+                        row.put(colName, val);
                     }
                     rows.add(row);
                 }
@@ -221,5 +237,29 @@ public class QueryExecutionService {
             log.warn("Không thể parse configJson sang SQL: {}", e.getMessage());
             return "SELECT 1 AS status";
         }
+    }
+
+    private Object extractSafeValue(ResultSet rs, int colIndex) throws SQLException {
+        Object val = rs.getObject(colIndex);
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof java.sql.Timestamp || val instanceof java.sql.Date || val instanceof java.sql.Time) {
+            return val.toString();
+        }
+        if (val instanceof java.sql.Clob clob) {
+            return clob.getSubString(1, (int) Math.min(clob.length(), 4000));
+        }
+        if (val instanceof java.sql.Blob blob) {
+            return "[BLOB " + blob.length() + " bytes]";
+        }
+        if (val instanceof byte[] bytes) {
+            return "[BINARY " + bytes.length + " bytes]";
+        }
+        String className = val.getClass().getName();
+        if (className.startsWith("oracle.sql.")) {
+            return val.toString();
+        }
+        return val;
     }
 }

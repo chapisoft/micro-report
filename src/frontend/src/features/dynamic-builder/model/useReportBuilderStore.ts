@@ -145,10 +145,17 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
       const dsList = await client.getDataSources(filterDs);
       set({ datasources: dsList });
 
+      const currentActive = get().activeDatasourceCode;
+      const isCurrentValid = dsList.some((ds) => ds.datasourceCode === currentActive);
+
       const targetDsCode =
+        (isCurrentValid && currentActive) ||
         defaultDatasourceCode ||
         (dsList.length > 0 ? dsList[0].datasourceCode : "");
-      if (targetDsCode) {
+
+      if (targetDsCode && targetDsCode !== currentActive) {
+        await get().setActiveDatasource(targetDsCode);
+      } else if (targetDsCode && !get().schemaInfo) {
         await get().setActiveDatasource(targetDsCode);
       }
     } catch (err: any) {
@@ -185,15 +192,23 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     });
     try {
       const schema = await get().apiClient.getSchema(code);
+      const firstTableName = schema.tables.length > 0 ? schema.tables[0].tableName : "";
       set((state) => ({
         schemaInfo: schema,
         schemaCache: { ...state.schemaCache, [code]: schema },
         isLoadingSchema: false,
         selectedTable: schema.tables.length > 0 ? schema.tables[0] : null,
+        guiConfig: {
+          primaryTable: firstTableName,
+          columns: [],
+          joins: [],
+          filters: [],
+          groupBy: [],
+          orderBy: [],
+          limit: 50,
+        },
+        previewData: null,
       }));
-      if (schema.tables.length > 0 && !get().guiConfig.primaryTable) {
-        get().setPrimaryTable(schema.tables[0].tableName);
-      }
     } catch (err: any) {
       set({
         schemaInfo: null,
