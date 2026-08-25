@@ -43,6 +43,13 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({ data, columns 
 
   const [showConfigPanel, setShowConfigPanel] = useState(false);
 
+  const [dataLimit, setDataLimit] = useState<number>(data.length > 20 ? 20 : 0);
+
+  const displayData = React.useMemo(() => {
+    if (dataLimit === 0 || data.length <= dataLimit) return data;
+    return data.slice(0, dataLimit);
+  }, [data, dataLimit]);
+
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-xs space-y-2">
@@ -106,17 +113,69 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({ data, columns 
           </button>
         </div>
 
-        <button
-          onClick={() => setShowConfigPanel(!showConfigPanel)}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-            showConfigPanel
-              ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-              : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
-          }`}
-        >
-          <Sliders className="w-3.5 h-3.5" />
-          <span>{t("bi.configVisual")}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {data.length > 10 && (
+            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[11px]">
+              <span className="px-2 py-0.5 text-slate-400 font-medium">Hiển thị:</span>
+              <button
+                onClick={() => setDataLimit(10)}
+                className={`px-2 py-0.5 rounded font-medium transition-all ${
+                  dataLimit === 10
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                Top 10
+              </button>
+              {data.length > 20 && (
+                <button
+                  onClick={() => setDataLimit(20)}
+                  className={`px-2 py-0.5 rounded font-medium transition-all ${
+                    dataLimit === 20
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                >
+                  Top 20
+                </button>
+              )}
+              {data.length > 50 && (
+                <button
+                  onClick={() => setDataLimit(50)}
+                  className={`px-2 py-0.5 rounded font-medium transition-all ${
+                    dataLimit === 50
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                >
+                  Top 50
+                </button>
+              )}
+              <button
+                onClick={() => setDataLimit(0)}
+                className={`px-2 py-0.5 rounded font-medium transition-all ${
+                  dataLimit === 0
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                Tất cả ({data.length})
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowConfigPanel(!showConfigPanel)}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              showConfigPanel
+                ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>{t("bi.configVisual")}</span>
+          </button>
+        </div>
       </div>
 
       {/* Optional Configuration Controls */}
@@ -223,17 +282,17 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({ data, columns 
       {/* Main Chart Canvas */}
       <div className="flex-1 min-h-[300px] flex items-center justify-center">
         {visualConfig.chartType === ChartType.BAR && (
-          <DynamicBarChart data={data} config={visualConfig} />
+          <DynamicBarChart data={displayData} config={visualConfig} />
         )}
         {visualConfig.chartType === ChartType.LINE && (
-          <DynamicLineChart data={data} config={visualConfig} />
+          <DynamicLineChart data={displayData} config={visualConfig} />
         )}
         {visualConfig.chartType === ChartType.PIE && (
-          <DynamicPieChart data={data} config={visualConfig} />
+          <DynamicPieChart data={displayData} config={visualConfig} />
         )}
         {visualConfig.chartType === ChartType.KPI && (
           <div className="w-full max-w-xl">
-            <KpiCard data={data} config={visualConfig} />
+            <KpiCard data={displayData} config={visualConfig} />
           </div>
         )}
       </div>
