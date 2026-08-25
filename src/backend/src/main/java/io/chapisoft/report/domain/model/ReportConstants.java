@@ -61,8 +61,8 @@ public final class ReportConstants {
     public static final String EXTENSION_CSV = ".csv";
     public static final char UTF8_BOM = '\ufeff';
 
-    public static final int DEFAULT_RATE_LIMIT_CAPACITY = 10;
-    public static final int DEFAULT_RATE_LIMIT_REFILL_TOKENS = 10;
+    public static final int DEFAULT_RATE_LIMIT_CAPACITY = 120;
+    public static final int DEFAULT_RATE_LIMIT_REFILL_TOKENS = 120;
     public static final int DEFAULT_RATE_LIMIT_REFILL_MINUTES = 1;
-    public static final String MSG_TOO_MANY_REQUESTS = "Bạn đã vượt quá giới hạn 10 yêu cầu/phút. Vui lòng thử lại sau.";
+    public static final String MSG_TOO_MANY_REQUESTS = "Bạn đã vượt quá giới hạn 120 yêu cầu/phút. Vui lòng thử lại sau.";
 }
