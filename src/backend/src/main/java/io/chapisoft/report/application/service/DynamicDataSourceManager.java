@@ -55,12 +55,13 @@ public class DynamicDataSourceManager {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy kết nối CSDL với mã: " + datasourceCode + " cho tenant: " + tenantId));
 
-        log.info("Khởi tạo HikariPool cho Tenant [{}], DataSource [{}]", tenantId, datasourceCode);
+        String resolvedJdbcUrl = resolveJdbcUrl(config.getJdbcUrl());
+        log.info("Khởi tạo HikariPool cho Tenant [{}], DataSource [{}], URL [{}]", tenantId, datasourceCode, resolvedJdbcUrl);
 
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setPoolName("Hikari-" + tenantId + "-" + datasourceCode);
         hikariConfig.setDriverClassName(config.getDbType().getDriverClassName());
-        hikariConfig.setJdbcUrl(config.getJdbcUrl());
+        hikariConfig.setJdbcUrl(resolvedJdbcUrl);
         hikariConfig.setUsername(config.getUsername());
         hikariConfig.setPassword(aesEncryptionService.decrypt(config.getPasswordEncrypted()));
         hikariConfig.setMaximumPoolSize(config.getMaxPoolSize() != null ? config.getMaxPoolSize()
@@ -73,6 +74,21 @@ public class DynamicDataSourceManager {
         hikariConfig.setAutoCommit(true);
 
         return new HikariDataSource(hikariConfig);
+    }
+
+    private String resolveJdbcUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isEmpty()) {
+            return rawUrl;
+        }
+        String hostGateway = System.getenv("DOCKER_HOST_GATEWAY");
+        if (hostGateway != null && !hostGateway.trim().isEmpty()) {
+            return rawUrl.replace("localhost", hostGateway.trim()).replace("127.0.0.1", hostGateway.trim());
+        }
+        // Fallback tự động khi ứng dụng chạy bên trong Docker Linux container
+        if (new java.io.File("/.dockerenv").exists()) {
+            return rawUrl.replace("localhost", "172.18.0.1").replace("127.0.0.1", "172.18.0.1");
+        }
+        return rawUrl;
     }
 
     public void evictDataSource(String tenantId, String datasourceCode) {
