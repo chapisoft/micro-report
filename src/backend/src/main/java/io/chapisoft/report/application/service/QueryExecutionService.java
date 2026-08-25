@@ -18,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,7 +72,8 @@ public class QueryExecutionService {
         // 2. Chuyển đổi tham số động {{params.var}} thành Named Parameters :param_var
         BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
-        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng) qua DatabaseDialect
+        // 3. Áp dụng giới hạn dòng preview (mặc định 50 dòng, tối đa 500 dòng) qua
+        // DatabaseDialect
         int limit = (request.getLimit() != null && request.getLimit() > 0
                 && request.getLimit() <= ReportConstants.MAX_PREVIEW_LIMIT)
                         ? request.getLimit()

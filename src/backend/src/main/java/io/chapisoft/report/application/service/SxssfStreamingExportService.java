@@ -4,6 +4,7 @@ import io.chapisoft.report.adapter.out.persistence.ExportTaskRepository;
 import io.chapisoft.report.application.dto.ExportRequest;
 import io.chapisoft.report.application.dto.ExportTaskDto;
 import io.chapisoft.report.domain.exception.ReportEngineException;
+import io.chapisoft.report.domain.export.PoiStyleFactory;
 import io.chapisoft.report.domain.model.ExportTask;
 import io.chapisoft.report.domain.model.QueryMode;
 import io.chapisoft.report.domain.model.ReportConstants;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -28,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSetMetaData;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -43,36 +47,41 @@ public class SxssfStreamingExportService {
     private final SqlSecurityAstValidator sqlSecurityAstValidator;
     private final DynamicParameterBinder parameterBinder;
     private final QueryExecutionService queryExecutionService;
-    private final String storageDir;
-    private final int streamingWindowSize;
+
+    @Value("${report.export.storage-dir:${report.export.temp-dir:./temp_exports}}")
+    private String exportTempDir;
+
+    @Value("${report.export.streaming-window-size:500}")
+    private int streamingWindowSize;
 
     public SxssfStreamingExportService(
             DynamicDataSourceManager dataSourceManager,
             ExportTaskRepository exportTaskRepository,
             SqlSecurityAstValidator sqlSecurityAstValidator,
             DynamicParameterBinder parameterBinder,
-            QueryExecutionService queryExecutionService,
-            @Value("${report.export.storage-dir:./temp_exports}") String storageDir,
-            @Value("${report.export.streaming-window-size:500}") int streamingWindowSize) {
+            QueryExecutionService queryExecutionService) {
         this.dataSourceManager = dataSourceManager;
         this.exportTaskRepository = exportTaskRepository;
         this.sqlSecurityAstValidator = sqlSecurityAstValidator;
         this.parameterBinder = parameterBinder;
         this.queryExecutionService = queryExecutionService;
-        this.storageDir = storageDir;
-        this.streamingWindowSize = streamingWindowSize;
-
-        File dir = new File(storageDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
     }
 
     public ExportTaskDto exportToExcel(String tenantId, String createdBy, ExportRequest request) {
         String taskCode = ReportConstants.PREFIX_TASK_CODE + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String baseName = request.getFileName() != null ? request.getFileName() : ReportConstants.DEFAULT_FILE_NAME_PREFIX + taskCode;
-        String fileName = baseName + ReportConstants.EXTENSION_EXCEL;
-        File targetFile = new File(storageDir, taskCode + "_" + fileName);
+        String fileName = (request.getFileName() != null && !request.getFileName().trim().isEmpty())
+                ? request.getFileName().trim()
+                : "Report_" + taskCode;
+
+        if (!fileName.endsWith(".xlsx")) {
+            fileName += ".xlsx";
+        }
+
+        File targetDir = new File(exportTempDir);
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+        File targetFile = new File(targetDir, taskCode + "_" + fileName);
 
         ExportTask task = ExportTask.builder()
                 .taskCode(taskCode)
@@ -101,6 +110,11 @@ public class SxssfStreamingExportService {
 
                 workbook.setCompressTempFiles(true);
                 Sheet sheet = workbook.createSheet(ReportConstants.DEFAULT_SHEET_NAME);
+                if (sheet instanceof SXSSFSheet sxSheet) {
+                    sxSheet.trackAllColumnsForAutoSizing();
+                }
+
+                PoiStyleFactory poiStyles = new PoiStyleFactory(workbook);
 
                 jdbcTemplate.query(
                         Objects.requireNonNull(boundSql.sql()),
@@ -109,27 +123,108 @@ public class SxssfStreamingExportService {
                     ResultSetMetaData metaData = rs.getMetaData();
                     int colCount = metaData.getColumnCount();
 
+                    boolean[] isNumericCol = new boolean[colCount];
+                    boolean[] isCurrencyCol = new boolean[colCount];
+                    boolean[] isDateCol = new boolean[colCount];
+
                     // Header Row
                     Row headerRow = sheet.createRow(0);
+                    headerRow.setHeightInPoints(24);
+
                     for (int i = 1; i <= colCount; i++) {
                         Cell cell = headerRow.createCell(i - 1);
-                        cell.setCellValue(metaData.getColumnLabel(i));
+                        String label = metaData.getColumnLabel(i);
+                        cell.setCellValue(label);
+                        cell.setCellStyle(poiStyles.getHeaderStyle());
+
+                        int colType = metaData.getColumnType(i);
+                        String upperLabel = label != null ? label.toUpperCase() : "";
+
+                        isNumericCol[i - 1] = (colType == Types.INTEGER || colType == Types.BIGINT
+                                || colType == Types.NUMERIC || colType == Types.DECIMAL
+                                || colType == Types.DOUBLE || colType == Types.FLOAT || colType == Types.REAL);
+
+                        isCurrencyCol[i - 1] = isNumericCol[i - 1] && (
+                                upperLabel.contains("AMOUNT") || upperLabel.contains("TOTAL")
+                                || upperLabel.contains("REVENUE") || upperLabel.contains("PRICE")
+                                || upperLabel.contains("FEE") || upperLabel.contains("COMMISSION")
+                                || upperLabel.contains("TIỀN") || upperLabel.contains("TIEN")
+                                || upperLabel.contains("DOANH THU") || upperLabel.contains("DOANH_THU")
+                                || upperLabel.contains("CHI PHÍ") || upperLabel.contains("CHI_PHI")
+                        );
+
+                        isDateCol[i - 1] = (colType == Types.DATE || colType == Types.TIMESTAMP || colType == Types.TIME);
                     }
 
                     // Data Rows
                     while (rs.next()) {
                         int rIdx = rowCount.incrementAndGet();
                         Row row = sheet.createRow(rIdx);
+                        row.setHeightInPoints(18);
+
                         for (int i = 1; i <= colCount; i++) {
                             Cell cell = row.createCell(i - 1);
                             Object val = rs.getObject(i);
+
                             if (val instanceof Number num) {
                                 cell.setCellValue(num.doubleValue());
+                                if (isCurrencyCol[i - 1]) {
+                                    cell.setCellStyle(poiStyles.getCurrencyStyle());
+                                } else {
+                                    cell.setCellStyle(poiStyles.getNumberStyle());
+                                }
                             } else if (val != null) {
                                 cell.setCellValue(val.toString());
+                                if (isDateCol[i - 1]) {
+                                    cell.setCellStyle(poiStyles.getDateStyle());
+                                } else {
+                                    cell.setCellStyle(poiStyles.getTextStyle());
+                                }
+                            } else {
+                                cell.setCellValue("");
+                                cell.setCellStyle(poiStyles.getTextStyle());
                             }
                         }
                     }
+
+                    // Tự động chèn dòng TỔNG CỘNG (Grand Total Row) nếu có ít nhất 1 dòng dữ liệu
+                    int totalDataRows = rowCount.get();
+                    if (totalDataRows > 0) {
+                        int totalRowIdx = rowCount.incrementAndGet();
+                        Row totalRow = sheet.createRow(totalRowIdx);
+                        totalRow.setHeightInPoints(22);
+
+                        Cell labelCell = totalRow.createCell(0);
+                        labelCell.setCellValue("TỔNG CỘNG");
+                        labelCell.setCellStyle(poiStyles.getTotalHeaderStyle());
+
+                        for (int c = 1; c < colCount; c++) {
+                            Cell totalCell = totalRow.createCell(c);
+                            if (isNumericCol[c]) {
+                                String colLetter = CellReference.convertNumToColString(c);
+                                String sumFormula = "SUM(" + colLetter + "2:" + colLetter + (totalDataRows + 1) + ")";
+                                totalCell.setCellFormula(sumFormula);
+                                if (isCurrencyCol[c]) {
+                                    totalCell.setCellStyle(poiStyles.getTotalCurrencyStyle());
+                                } else {
+                                    totalCell.setCellStyle(poiStyles.getTotalNumberStyle());
+                                }
+                            } else {
+                                totalCell.setCellValue("");
+                                totalCell.setCellStyle(poiStyles.getTotalHeaderStyle());
+                            }
+                        }
+                    }
+
+                    // Áp dụng Freeze Top Row và AutoFilter
+                    PoiStyleFactory.applySheetFeatures(sheet, totalDataRows, colCount);
+
+                    // Tự động căn chỉnh độ rộng cột tối thiểu để hiển thị rõ ràng số tiền và tiêu đề
+                    for (int c = 0; c < colCount; c++) {
+                        int colWidth = isCurrencyCol[c] ? 6500 : isDateCol[c] ? 5500 : 4800;
+                        sheet.setColumnWidth(c, colWidth);
+                    }
+
                     return null;
                 });
 
@@ -163,9 +258,19 @@ public class SxssfStreamingExportService {
 
     public ExportTaskDto exportToCsv(String tenantId, String createdBy, ExportRequest request) {
         String taskCode = ReportConstants.PREFIX_TASK_CODE + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String baseName = request.getFileName() != null ? request.getFileName() : ReportConstants.DEFAULT_FILE_NAME_PREFIX + taskCode;
-        String fileName = baseName + ReportConstants.EXTENSION_CSV;
-        File targetFile = new File(storageDir, taskCode + "_" + fileName);
+        String fileName = (request.getFileName() != null && !request.getFileName().trim().isEmpty())
+                ? request.getFileName().trim()
+                : "Report_" + taskCode;
+
+        if (!fileName.endsWith(".csv")) {
+            fileName += ".csv";
+        }
+
+        File targetDir = new File(exportTempDir);
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+        File targetFile = new File(targetDir, taskCode + "_" + fileName);
 
         ExportTask task = ExportTask.builder()
                 .taskCode(taskCode)
