@@ -39,6 +39,7 @@ interface ReportBuilderState {
   datasources: DataSource[];
   activeDatasourceCode: string;
   schemaInfo: SchemaInfo | null;
+  schemaCache: Record<string, SchemaInfo>;
   selectedTable: TableInfo | null;
 
   guiConfig: VisualGuiConfig;
@@ -69,9 +70,9 @@ interface ReportBuilderState {
   setMode: (mode: QueryMode) => void;
   setActiveDatasource: (code: string) => Promise<void>;
   setSelectedTable: (table: TableInfo | null) => void;
-  setSqlQuery: (sql: string) => void;
+  setSqlQuery: (sqlQuery: string) => void;
   setQueryParameter: (key: string, value: any) => void;
-  setTransformJs: (js: string) => void;
+  setTransformJs: (transformJs: string) => void;
   clearPreview: () => void;
 
   // Visual GUI Actions
@@ -105,6 +106,7 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
   datasources: [],
   activeDatasourceCode: "",
   schemaInfo: null,
+  schemaCache: {},
   selectedTable: null,
 
   guiConfig: initialGuiConfig,
@@ -160,6 +162,22 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
   setMode: (mode) => set({ mode }),
 
   setActiveDatasource: async (code: string) => {
+    if (!code) return;
+    const { schemaCache } = get();
+    if (schemaCache[code]) {
+      const cached = schemaCache[code];
+      set({
+        activeDatasourceCode: code,
+        schemaInfo: cached,
+        isLoadingSchema: false,
+        selectedTable: cached.tables.length > 0 ? cached.tables[0] : null,
+      });
+      if (cached.tables.length > 0 && !get().guiConfig.primaryTable) {
+        get().setPrimaryTable(cached.tables[0].tableName);
+      }
+      return;
+    }
+
     set({
       activeDatasourceCode: code,
       isLoadingSchema: true,
@@ -167,11 +185,12 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     });
     try {
       const schema = await get().apiClient.getSchema(code);
-      set({
+      set((state) => ({
         schemaInfo: schema,
+        schemaCache: { ...state.schemaCache, [code]: schema },
         isLoadingSchema: false,
         selectedTable: schema.tables.length > 0 ? schema.tables[0] : null,
-      });
+      }));
       if (schema.tables.length > 0 && !get().guiConfig.primaryTable) {
         get().setPrimaryTable(schema.tables[0].tableName);
       }

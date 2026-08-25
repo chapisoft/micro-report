@@ -30,7 +30,7 @@ class RateLimitingInterceptorTest {
     }
 
     @Test
-    @DisplayName("Cho phép tối đa 10 request/phút cho 1 User, chặn request thứ 11 với mã 429 (GAP-06)")
+    @DisplayName("Cho phép tối đa request theo cấu hình cho 1 User, chặn request vượt mức với mã 429 (GAP-06)")
     void shouldEnforceRateLimitPerUser() throws Exception {
         TenantContext context = TenantContext.builder()
                 .tenantId("DIP_BHXH")
@@ -39,8 +39,10 @@ class RateLimitingInterceptorTest {
                 .build();
         TenantContext.set(context);
 
-        // 10 request đầu tiên phải thành công
-        for (int i = 1; i <= 10; i++) {
+        int capacity = ReportConstants.DEFAULT_RATE_LIMIT_CAPACITY;
+
+        // Các request đầu tiên trong dung lượng bucket phải thành công
+        for (int i = 1; i <= capacity; i++) {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/reports/datasources");
             MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -49,14 +51,14 @@ class RateLimitingInterceptorTest {
             assertThat(response.getStatus()).isEqualTo(200);
         }
 
-        // Request thứ 11 phải bị từ chối với HTTP 429
-        MockHttpServletRequest request11 = new MockHttpServletRequest("GET", "/api/v1/reports/datasources");
-        MockHttpServletResponse response11 = new MockHttpServletResponse();
+        // Request kế tiếp phải bị từ chối với HTTP 429
+        MockHttpServletRequest blockedRequest = new MockHttpServletRequest("GET", "/api/v1/reports/datasources");
+        MockHttpServletResponse blockedResponse = new MockHttpServletResponse();
 
-        boolean allowed11 = interceptor.preHandle(request11, response11, new Object());
-        assertThat(allowed11).as("Request 11 phải bị chặn").isFalse();
-        assertThat(response11.getStatus()).isEqualTo(429);
-        assertThat(response11.getContentAsString()).contains("TOO_MANY_REQUESTS");
+        boolean allowedExceeded = interceptor.preHandle(blockedRequest, blockedResponse, new Object());
+        assertThat(allowedExceeded).as("Request vượt hạn mức phải bị chặn").isFalse();
+        assertThat(blockedResponse.getStatus()).isEqualTo(429);
+        assertThat(blockedResponse.getContentAsString()).contains("TOO_MANY_REQUESTS");
     }
 
     @Test
@@ -72,9 +74,11 @@ class RateLimitingInterceptorTest {
     @Test
     @DisplayName("Các User khác nhau có bucket độc lập")
     void shouldIsolateRateLimitsBetweenDifferentUsers() throws Exception {
-        // User 1 dùng hết 10 tokens
+        int capacity = ReportConstants.DEFAULT_RATE_LIMIT_CAPACITY;
+
+        // User 1 dùng hết tokens
         TenantContext.set(TenantContext.builder().tenantId("DIP_BHXH").userId("user_1").build());
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= capacity; i++) {
             interceptor.preHandle(new MockHttpServletRequest(), new MockHttpServletResponse(), new Object());
         }
 

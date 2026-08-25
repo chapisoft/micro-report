@@ -47,19 +47,34 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     }
 
     private String resolveClientKey(HttpServletRequest request) {
+        String clientIp = getClientIp(request);
         TenantContext ctx = TenantContext.get();
         if (ctx != null && ctx.getTenantId() != null) {
-            String userId = ctx.getUserId() != null ? ctx.getUserId() : ReportConstants.CREATED_BY_ANONYMOUS;
-            return ctx.getTenantId() + "::" + userId;
+            String userId = (ctx.getUserId() != null && !ctx.getUserId().trim().isEmpty() && !ReportConstants.CREATED_BY_ANONYMOUS.equalsIgnoreCase(ctx.getUserId()))
+                    ? ctx.getUserId().trim()
+                    : clientIp;
+            return ctx.getTenantId().trim() + "::" + userId;
         }
 
         String headerTenant = request.getHeader(ReportConstants.HEADER_TENANT_ID);
         if (headerTenant != null && !headerTenant.trim().isEmpty()) {
-            return headerTenant.trim();
+            return headerTenant.trim() + "::" + clientIp;
         }
 
+        return clientIp;
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader != null && !xfHeader.trim().isEmpty()) {
+            return xfHeader.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.trim().isEmpty()) {
+            return realIp.trim();
+        }
         String remoteAddr = request.getRemoteAddr();
-        return remoteAddr != null ? remoteAddr : ReportConstants.CREATED_BY_ANONYMOUS;
+        return (remoteAddr != null && !remoteAddr.trim().isEmpty()) ? remoteAddr.trim() : ReportConstants.CREATED_BY_ANONYMOUS;
     }
 
     private TokenBucket createNewBucket() {
