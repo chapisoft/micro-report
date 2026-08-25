@@ -45,10 +45,13 @@ export const DynamicLineChart: React.FC<DynamicLineChartProps> = ({ data, config
     return value;
   };
 
+  const autoInterval =
+    data.length > 35 ? Math.ceil(data.length / 10) : data.length > 18 ? 1 : 0;
+
   return (
     <div className="w-full h-80 bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 25 }}>
+        <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: data.length > 6 ? 40 : 20 }}>
           {config.showGrid !== false && (
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
           )}
@@ -56,9 +59,13 @@ export const DynamicLineChart: React.FC<DynamicLineChartProps> = ({ data, config
             dataKey={xAxisKey}
             tick={{ fill: "#64748b", fontSize: 11 }}
             axisLine={{ stroke: "#cbd5e1" }}
-            interval={0}
-            angle={-20}
-            textAnchor="end"
+            interval={autoInterval}
+            angle={data.length > 6 ? -25 : 0}
+            textAnchor={data.length > 6 ? "end" : "middle"}
+            tickFormatter={(val) => {
+              const str = String(val ?? "");
+              return str.length > 14 ? str.slice(0, 12) + "…" : str;
+            }}
           />
           <YAxis
             tick={{ fill: "#64748b", fontSize: 11 }}

@@ -27,16 +27,16 @@ DELETE FROM RPT_DATASOURCES WHERE (TENANT_ID, DATASOURCE_CODE) IN (
 INSERT INTO RPT_DATASOURCES (DATASOURCE_CODE, TENANT_ID, NAME, DB_TYPE, JDBC_URL, USERNAME, PASSWORD_ENCRYPTED, MAX_POOL_SIZE, IS_READ_ONLY, STATUS)
 VALUES 
     -- 1.1. Hệ thống DIP Platform (OLAP Data Warehouse qua SSH Tunnel)
-    ('DIP_DWH', 'DIP_BHXH', 'DIP OLAP Data Warehouse', 'POSTGRESQL', 'jdbc:postgresql://localhost:5433/dip_olap', 'dip_olap_user', 'gRKJLsnabGpV/WaF+Y+BG/v2oyLqcKT69uJEb4GY12w=', 10, TRUE, 'ACTIVE'),
+    ('DIP_DWH', 'DIP_BHXH', 'DIP OLAP Data Warehouse', 'POSTGRESQL', 'jdbc:postgresql://localhost:5432/dip_olap', 'dip_olap_user', 'gRKJLsnabGpV/WaF+Y+BG/v2oyLqcKT69uJEb4GY12w=', 10, TRUE, 'ACTIVE'),
     
     -- 1.2. Hệ thống DIP Platform (CSDL Nghiệp vụ Oracle qua SSH Tunnel)
     ('DIP_ORACLE', 'DIP_BHXH', 'DIP Core Oracle XE', 'ORACLE', 'jdbc:oracle:thin:@localhost:1521/XEPDB1', 'dip_user', 'YMTgbrmgbPdcKBM0nHZpXw==', 10, TRUE, 'ACTIVE'),
 
     -- 1.3. Hệ thống Micro-CRM (OLAP CSDL Khách hàng & Bán hàng)
-    ('CRM_DWH', 'MICRO_CRM', 'Micro-CRM OLAP Database', 'POSTGRESQL', 'jdbc:postgresql://localhost:5433/crm_olap', 'crm_readonly', '+XjDZd+NJMd9Cjmw3zmIqW1Y6CL1eKicqbjQZbPzecM=', 10, TRUE, 'ACTIVE'),
+    ('CRM_DWH', 'MICRO_CRM', 'Micro-CRM OLAP Database', 'POSTGRESQL', 'jdbc:postgresql://localhost:5432/crm_olap', 'crm_readonly', '+XjDZd+NJMd9Cjmw3zmIqW1Y6CL1eKicqbjQZbPzecM=', 10, TRUE, 'ACTIVE'),
     
     -- 1.4. Hệ thống Ví Điện Tử Natcash
-    ('NATCASH_DWH', 'NATCASH_PAYMENT', 'Natcash Payment OLAP DB', 'POSTGRESQL', 'jdbc:postgresql://localhost:5433/natcash_db', 'natcash_user', 'gRKJLsnabGpV/WaF+Y+BG/v2oyLqcKT69uJEb4GY12w=', 10, TRUE, 'ACTIVE'),
+    ('NATCASH_DWH', 'NATCASH_PAYMENT', 'Natcash Payment OLAP DB', 'POSTGRESQL', 'jdbc:postgresql://localhost:5432/natcash_db', 'natcash_user', 'gRKJLsnabGpV/WaF+Y+BG/v2oyLqcKT69uJEb4GY12w=', 10, TRUE, 'ACTIVE'),
     
     -- 1.5. Môi trường Mặc định / Sandbox
     ('DEFAULT_DS', 'DEFAULT', 'Default Embedded H2 Database', 'H2', 'jdbc:h2:mem:report_meta_db;MODE=PostgreSQL', 'sa', 'vvwJatk83QuwyapTkqo2KA==', 5, TRUE, 'ACTIVE');

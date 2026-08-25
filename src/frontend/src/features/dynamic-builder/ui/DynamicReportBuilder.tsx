@@ -172,6 +172,32 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
     }
   };
 
+  const [previewHeight, setPreviewHeight] = useState<number>(340);
+  const isDraggingRef = React.useRef(false);
+  const startYRef = React.useRef(0);
+  const startHeightRef = React.useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    startYRef.current = e.clientY;
+    startHeightRef.current = previewHeight;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    const deltaY = startYRef.current - e.clientY;
+    const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 160), window.innerHeight - 160);
+    setPreviewHeight(newHeight);
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
+
   return (
     <div
       className={`flex flex-col h-screen w-full overflow-hidden ${
@@ -195,9 +221,6 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
             <div>
               <h1 className="font-bold text-sm leading-tight text-slate-900 dark:text-slate-100 flex items-center space-x-1.5">
                 <span>{t("builder.title")}</span>
-                <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-mono rounded">
-                  v4.0
-                </span>
               </h1>
               {currentTenant ? (
                 <div className="flex items-center space-x-2 mt-0.5">
@@ -291,10 +314,23 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
         {/* Left: Schema Tree Explorer */}
         <SchemaTreeExplorer />
 
-        {/* Center / Right: Builder Canvas + Live Preview Table */}
+        {/* Center / Right: Builder Canvas + Resizable Live Preview Table */}
         <main className="flex-1 flex flex-col overflow-hidden">
-          {mode === "GUI" ? <VisualGuiBuilder /> : <MonacoSqlEditor />}
+          <div className="flex-1 overflow-hidden min-h-0">
+            {mode === "GUI" ? <VisualGuiBuilder /> : <MonacoSqlEditor />}
+          </div>
+
+          {/* Vertical Drag Resizer Handle */}
+          <div
+            onMouseDown={handleMouseDown}
+            className="h-2 w-full bg-slate-100 hover:bg-blue-500 dark:bg-slate-800 dark:hover:bg-blue-500 cursor-row-resize flex items-center justify-center transition-all group z-10 select-none border-y border-slate-200 dark:border-slate-700/80 shrink-0"
+            title="Nhấp giữ và kéo lên/xuống để tùy chỉnh độ cao"
+          >
+            <div className="w-12 h-1 rounded-full bg-slate-300 group-hover:bg-white dark:bg-slate-600 transition-colors" />
+          </div>
+
           <LiveDataPreviewTable
+            height={previewHeight}
             onOpenExportModal={() => setIsExportModalOpen(true)}
             onOpenAuth={() => setIsAuthModalOpen(true)}
           />
