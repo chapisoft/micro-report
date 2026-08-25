@@ -231,13 +231,12 @@ pipeline {
                         fi
                         SERVICES_TO_RELOAD=$(echo $SERVICES_TO_RELOAD | xargs)
 
-                        # Nếu là first build hoặc deploy all -> khởi động cả metadata DB và tất cả services
-                        if [ -z "$SERVICES_TO_RELOAD" ] || [ "${TARGET_SERVICE}" = "all" ]; then
+                        if [ -n "$SERVICES_TO_RELOAD" ]; then
+                            echo "🚀 Tiến hành Rolling Update độc lập cho các dịch vụ: $SERVICES_TO_RELOAD"
+                            docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --no-deps $SERVICES_TO_RELOAD
+                        else
                             echo "🚀 Triển khai toàn bộ Stack Micro-Report (DB + Backend + Frontend)..."
                             docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --remove-orphans
-                        else
-                            echo "🚀 Tiến hành Rolling Update cho các dịch vụ: $SERVICES_TO_RELOAD"
-                            docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --no-deps $SERVICES_TO_RELOAD
                         fi
 
                         # 5. Reload Nginx Gateway nếu Gateway config thay đổi
