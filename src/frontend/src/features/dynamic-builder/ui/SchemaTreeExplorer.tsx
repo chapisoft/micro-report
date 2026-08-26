@@ -45,7 +45,7 @@ export const SchemaTreeExplorer: React.FC = () => {
   ) || [];
 
   return (
-    <aside className="w-80 flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-sm">
+    <aside className="w-72 lg:w-80 flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-sm shrink-0">
       {/* Header & DataSource Picker */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
