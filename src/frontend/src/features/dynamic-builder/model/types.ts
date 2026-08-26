@@ -14,6 +14,16 @@ export const BUILDER_CONSTANTS = {
   DEFAULT_PREVIEW_LIMIT: 50,
   FILTER_ALL: "all",
   DEFAULT_TEMPLATE_NAME: "Custom Report",
+  DEFAULT_TENANT_NAME: "HỆ THỐNG ĐỐI SOÁT & BÁO CÁO DOANH NGHIỆP",
+  DEFAULT_REPORT_NUMBER: "BC-RPT-01/AUTO",
+  // Titles (Chức danh — người dùng tự chỉnh được)
+  DEFAULT_SIGNER_TITLE: "Người Lập Biểu",
+  DEFAULT_ACCOUNTANT_TITLE: "Kế Toán Trưởng",
+  DEFAULT_DIRECTOR_TITLE: "Thủ Trưởng Đơn Vị",
+  // Names (Tên người ký — người dùng tự điền)
+  DEFAULT_SIGNER_NAME: "",
+  DEFAULT_ACCOUNTANT_NAME: "",
+  DEFAULT_DIRECTOR_NAME: "",
 } as const;
 
 export enum TemplateStatus {
@@ -32,6 +42,7 @@ export enum TaskStatus {
 export enum ExportFormat {
   EXCEL = "EXCEL",
   CSV = "CSV",
+  PDF = "PDF",
 }
 
 export enum DatabaseType {
@@ -111,12 +122,84 @@ export interface SchemaInfo {
   tables: TableInfo[];
 }
 
+export interface DynamicParamConfig {
+  id: string;
+  name: string;             // VD: fromDate, toDate, provinceCode
+  label: string;            // VD: Từ ngày, Đến ngày, Tỉnh/Thành phố
+  type: "Date" | "Dropdown" | "Text" | "Number";
+  defaultValue: string;
+  isRequired: boolean;
+  options?: string[];       // Dành cho kiểu Dropdown
+}
+
+export interface StaticFilterRule {
+  id: string;
+  logicalOp: "AND" | "OR";
+  tableName?: string;
+  column: string;
+  operator: "=" | "!=" | ">" | ">=" | "<" | "<=" | "IN" | "LIKE" | "IS NULL" | "IS NOT NULL";
+  value: string;
+}
+
+export interface SelectedColumnConfig {
+  id: string;
+  tableName: string;
+  columnName: string;
+  alias: string;
+  aggregation: AggregationType;
+  dataType: string;
+  isFormula?: boolean;
+  formulaExpression?: string;
+}
+
+export interface JoinConfig {
+  id: string;
+  joinType: JoinType;
+  sourceTable: string;
+  sourceColumn: string;
+  targetTable: string;
+  targetColumn: string;
+}
+
+export interface ReportVisualConfig {
+  chartType: ChartType;
+  chartTitle: string;
+  xAxisKey: string;
+  yAxisKey: string;
+  showValueLabel: boolean;
+  showGrid: boolean;
+  colorPalette: "corporate" | "emerald" | "sunset" | string;
+  numberFormat: "compact" | "full";
+  currencyUnit: string;
+}
+
+export interface ReportTemplateMetadata {
+  title: string;
+  templateCode: string;
+  description: string;
+  category: string;
+  defaultViewMode: "BOTH" | "CHART" | "TABLE";
+}
+
+export interface ReportTemplateConfig {
+  metadata: ReportTemplateMetadata;
+  mainTable: string;
+  joins: JoinConfig[];
+  selectedColumns: SelectedColumnConfig[];
+  staticFilters: StaticFilterRule[];
+  dynamicParams: DynamicParamConfig[];
+  visualConfig: ReportVisualConfig;
+}
+
 export interface SelectedColumn {
   id: string;
   tableName: string;
   columnName: string;
   alias?: string;
   aggregation?: AggregationType;
+  dataType?: string;
+  isFormula?: boolean;
+  formulaExpression?: string;
 }
 
 export interface JoinRelation {
@@ -142,6 +225,9 @@ export interface VisualGuiConfig {
   columns: SelectedColumn[];
   joins: JoinRelation[];
   filters: FilterCondition[];
+  dynamicParams?: DynamicParamConfig[];
+  metadata?: ReportTemplateMetadata;
+  visualConfig?: ReportVisualConfig;
   groupBy: string[];
   orderBy: { column: string; direction: "ASC" | "DESC" }[];
   limit: number;
@@ -195,6 +281,9 @@ export enum ChartType {
   PIE = "PIE",
   KPI = "KPI",
   TABLE = "TABLE",
+  DONUT = "DONUT",
+  KPI_CARD = "KPI_CARD",
+  PIVOT = "PIVOT",
 }
 
 export interface ColumnMetadataDto {
@@ -220,4 +309,7 @@ export interface ReportVisualConfigDto {
   showLegend?: boolean;
   showGrid?: boolean;
   colorPalette?: string[];
+  numberFormat?: "compact" | "full";
+  currencyUnit?: string;
 }
+

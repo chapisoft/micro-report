@@ -263,8 +263,8 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
                 <span>{previewData.executionTimeMs} ms</span>
               </span>
               <span>•</span>
-              <span className="flex items-center space-x-1 text-slate-400">
-                <Activity className="w-3.5 h-3.5 text-purple-500" />
+              <span className="flex items-center space-x-1 text-slate-500 dark:text-slate-400">
+                <Activity className="w-3.5 h-3.5 text-blue-500" />
                 <span>{previewData.columns.length} cột</span>
               </span>
             </>
