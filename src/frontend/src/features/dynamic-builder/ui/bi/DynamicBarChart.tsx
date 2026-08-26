@@ -128,16 +128,23 @@ export const DynamicBarChart: React.FC<DynamicBarChartProps> = ({ data, config, 
             }}
           />
           {config.showLegend !== false && <Legend wrapperStyle={{ fontSize: "12px" }} />}
-          {yAxisKeys.map((key, index) => (
-            <Bar
-              key={key}
-              dataKey={key}
-              fill={colors[index % colors.length]}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={50}
-              onClick={(entry) => onBarClick && onBarClick(entry)}
-            />
-          ))}
+          {yAxisKeys.map((key, index) => {
+            const displayName =
+              key === "commission" || key === "HOA_HONG" || key === "HOA_HONG_THUC_NHAN"
+                ? t("viewer.colTotalRevenue")
+                : key;
+            return (
+              <Bar
+                key={key}
+                dataKey={key}
+                name={displayName}
+                fill={colors[index % colors.length]}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={50}
+                onClick={(entry) => onBarClick && onBarClick(entry)}
+              />
+            );
+          })}
         </BarChart>
       </ResponsiveContainer>
     </div>

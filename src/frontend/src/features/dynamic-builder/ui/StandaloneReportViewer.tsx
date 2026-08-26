@@ -204,39 +204,38 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
     return t("builder.categoryGeneral");
   }, [storeMetadata]);
 
-  // Default sample provinces dataset
-  const defaultProvincesData = useMemo(() => [
-    { name: "BHXH TP Hà Nội", commission: 12450000000, units: 128, provinceCode: "HN" },
-    { name: "BHXH TP Hồ Chí Minh", commission: 18320500000, units: 156, provinceCode: "HCM" },
-    { name: "BHXH TP Đà Nẵng", commission: 6850200000, units: 89, provinceCode: "DN" },
-    { name: "BHXH TP Hải Phòng", commission: 7210000000, units: 76, provinceCode: "HP" },
-    { name: "BHXH TP Cần Thơ", commission: 4330000000, units: 58, provinceCode: "CT" },
-  ], []);
-
-  // Base rows from Preview Data or default dataset
+  // Base rows from Preview Data or empty array (NO FAKE MOCK DATA)
   const effectiveBaseRows = useMemo(() => {
     if (previewData?.rows && previewData.rows.length > 0) return previewData.rows;
     if (storePreviewData?.rows && storePreviewData.rows.length > 0) return storePreviewData.rows;
-    return defaultProvincesData;
-  }, [previewData, storePreviewData, defaultProvincesData]);
+    return [];
+  }, [previewData, storePreviewData]);
+
+  // Dynamically extract all available provinces / units from actual dataset (100% Dynamic, NO HARDCODE)
+  const dynamicProvinceOptions = useMemo(() => {
+    const provinceMap = new Map<string, string>();
+    effectiveBaseRows.forEach((rawR) => {
+      const r = rawR as Record<string, any>;
+      const provName = String(r.name || r.TEN_TINH || r.TINH || r.PROVINCE || "").trim();
+      const provCode = String(r.provinceCode || r.MA_TINH || provName).trim();
+      if (provName) {
+        provinceMap.set(provCode, provName);
+      }
+    });
+    return Array.from(provinceMap.entries()).map(([code, name]) => ({ code, name }));
+  }, [effectiveBaseRows]);
 
   // Filtered rows based on user's applied filter parameters
   const filteredRows = useMemo(() => {
     let rows = [...effectiveBaseRows];
-    const selectedProv = (appliedFilters.province || appliedFilters.tinh || appliedFilters.provinces || "").trim();
+    const selectedProv = (appliedFilters.province || appliedFilters.tinh || appliedFilters.provinces || "").trim().toLowerCase();
 
-    if (selectedProv && selectedProv !== "ALL" && selectedProv !== "") {
+    if (selectedProv && selectedProv !== "all" && selectedProv !== "") {
       rows = rows.filter((rawR) => {
         const r = rawR as Record<string, any>;
         const nameVal = String(r.name || r.TINH || r.TEN_TINH || r.PROVINCE || "").toLowerCase();
         const provCode = String(r.provinceCode || r.MA_TINH || "").toLowerCase();
-        const target = selectedProv.toLowerCase();
-        if (target === "hn" || target === "hà nội") return nameVal.includes("hà nội") || provCode === "hn";
-        if (target === "hcm" || target === "hồ chí minh") return nameVal.includes("hồ chí minh") || provCode === "hcm";
-        if (target === "dn" || target === "đà nẵng") return nameVal.includes("đà nẵng") || provCode === "dn";
-        if (target === "hp" || target === "hải phòng") return nameVal.includes("hải phòng") || provCode === "hp";
-        if (target === "ct" || target === "cần thơ") return nameVal.includes("cần thơ") || provCode === "ct";
-        return nameVal.includes(target) || provCode.includes(target);
+        return nameVal.includes(selectedProv) || provCode.includes(selectedProv) || (provCode !== "" && selectedProv.includes(provCode));
       });
     }
 
@@ -384,17 +383,6 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
           </button>
 
           <button
-            onClick={() => setIsPdfModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 shadow-xs transition-all cursor-pointer"
-            title={t("pdf.modalSubtitle")}
-          >
-            <Printer className="w-3.5 h-3.5 text-red-600" />
-            <span>{t("pdf.btnToolbarPrint")}</span>
-          </button>
-
-
-
-          <button
             onClick={() => setIsExportModalOpen(true)}
             className="flex items-center space-x-1.5 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
           >
@@ -423,11 +411,17 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                       className="h-8 px-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 cursor-pointer min-w-[180px]"
                     >
                       <option value="ALL">{t("viewer.provinceAll")}</option>
-                      <option value="HN">{t("viewer.provinceHanoi")}</option>
-                      <option value="HCM">{t("viewer.provinceHCM")}</option>
-                      <option value="DN">{t("viewer.provinceDaNang")}</option>
-                      <option value="HP">{t("viewer.provinceHaiPhong")}</option>
-                      <option value="CT">{t("viewer.provinceCanTho")}</option>
+                      {param.options && param.options.length > 0
+                        ? param.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))
+                        : dynamicProvinceOptions.map((p) => (
+                            <option key={p.code} value={p.code}>
+                              {p.name}
+                            </option>
+                          ))}
                     </select>
                   ) : (
                     <input
@@ -470,18 +464,28 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {t("viewer.colProvince")}
                   </label>
-                  <select
-                    value={filterValues.province || "ALL"}
-                    onChange={(e) => setFilterValues({ ...filterValues, province: e.target.value })}
-                    className="w-60 h-8 px-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                  >
-                    <option value="ALL">{t("viewer.provinceAll")}</option>
-                    <option value="HN">{t("viewer.provinceHanoi")}</option>
-                    <option value="HCM">{t("viewer.provinceHCM")}</option>
-                    <option value="DN">{t("viewer.provinceDaNang")}</option>
-                    <option value="HP">{t("viewer.provinceHaiPhong")}</option>
-                    <option value="CT">{t("viewer.provinceCanTho")}</option>
-                  </select>
+                  {dynamicProvinceOptions.length > 0 ? (
+                    <select
+                      value={filterValues.province || "ALL"}
+                      onChange={(e) => setFilterValues({ ...filterValues, province: e.target.value })}
+                      className="w-60 h-8 px-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    >
+                      <option value="ALL">{t("viewer.provinceAll")}</option>
+                      {dynamicProvinceOptions.map((p) => (
+                        <option key={p.code} value={p.code}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={filterValues.province || ""}
+                      placeholder={t("viewer.provincePlaceholder")}
+                      onChange={(e) => setFilterValues({ ...filterValues, province: e.target.value })}
+                      className="w-60 h-8 px-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
                 </div>
               </>
             )}
@@ -526,7 +530,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
             </div>
             <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1 mt-1">
               <span>↗</span>
-              <span>+18.4% so với tháng trước</span>
+              <span>{t("viewer.kpiRevenueGrowth")}</span>
             </div>
           </div>
         </div>
@@ -563,7 +567,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
               {kpiStats.distinctProvinces} <span className="text-xs font-bold text-slate-400 font-sans">{t("viewer.unitProvince")}</span>
             </div>
             <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 mt-1">
-              Độ phủ 100% mục tiêu
+              {t("viewer.kpiCoverageStatus")}
             </div>
           </div>
         </div>
@@ -582,7 +586,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
             </div>
             <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1 mt-1">
               <span>↗</span>
-              <span>+5.2% hiệu suất</span>
+              <span>{t("viewer.kpiEfficiencyStatus")}</span>
             </div>
           </div>
         </div>
@@ -597,10 +601,10 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
           <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
             <div>
               <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                Biểu Đồ Phân Tích Trực Quan
+                {t("viewer.chartTitle")}
               </span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Nhấp vào cột hoặc lát cắt để phân tích sâu (Drill-Down)
+                {t("viewer.chartSubtitle")}
               </p>
             </div>
 
@@ -614,7 +618,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
-                Cột
+                {t("viewer.chartBar")}
               </button>
               <button
                 onClick={() => setSelectedChartType(ChartType.LINE)}
@@ -624,7 +628,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
-                Đường
+                {t("viewer.chartLine")}
               </button>
               <button
                 onClick={() => setSelectedChartType(ChartType.PIE)}
@@ -634,7 +638,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
-                Tròn
+                {t("viewer.chartPie")}
               </button>
               <button
                 onClick={() => setSelectedChartType(ChartType.KPI)}
@@ -644,7 +648,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
-                KPI
+                {t("viewer.chartKpi")}
               </button>
             </div>
           </div>
@@ -735,14 +739,14 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <div>
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      Bảng Số Liệu Chi Tiết
+                      {t("viewer.tableTitle")}
                     </span>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Nhấp vào dòng để xem danh sách đại lý chi tiết
+                      {t("viewer.tableSubtitle")}
                     </p>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
-                    {totalRows} ĐƠN VỊ
+                    {totalRows} {t("viewer.unitUnit").toUpperCase()}
                   </span>
                 </div>
 
@@ -816,7 +820,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                       {totalRows === 0 && (
                         <tr>
                           <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
-                            Không tìm thấy bản ghi nào phù hợp với bộ lọc.
+                            {t("common.noData")}
                           </td>
                         </tr>
                       )}
@@ -824,7 +828,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
                     <tfoot className="bg-slate-50 dark:bg-slate-800 font-bold border-t border-slate-200 dark:border-slate-700 text-xs">
                       <tr>
                         <td colSpan={4} className="px-3 py-2 text-left text-slate-800 dark:text-slate-200">
-                          TỔNG CỘNG ({totalRows} Đơn Vị)
+                          {t("viewer.tableGrandTotal")} ({totalRows} {t("viewer.unitUnit")})
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-blue-700 dark:text-blue-300 font-bold">
                           {formatCurrency(kpiStats.totalRevenue)}

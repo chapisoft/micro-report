@@ -19,8 +19,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, config }) => {
     );
   }
 
-  const title = config.kpiTitle || "Chỉ Số Tổng Hợp";
-  const subtitle = config.kpiSubtitle || `Dựa trên ${data.length} bản ghi truy vấn`;
+  const title = config.kpiTitle || t("bi.kpiTitle");
+  const subtitle = config.kpiSubtitle || t("bi.kpiBasedOnRows").replace("{count}", String(data.length));
   const agg = config.kpiAggregation || "SUM";
   const format = config.kpiFormat || "CURRENCY";
 
@@ -97,9 +97,9 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, config }) => {
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
         <span className="flex items-center space-x-1">
           <Activity className="w-3 h-3 text-blue-500" />
-          <span>Tự động tính từ kết quả truy vấn</span>
+          <span>{t("bi.kpiAutoCalculated")}</span>
         </span>
-        <span className="font-mono text-slate-500">{data.length} dòng</span>
+        <span className="font-mono text-slate-500">{t("bi.totalRowsFootnote").replace("{count}", String(data.length))}</span>
       </div>
     </div>
   );

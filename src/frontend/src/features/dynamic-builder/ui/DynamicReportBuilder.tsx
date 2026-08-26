@@ -380,7 +380,7 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
-                      <span>No-Code GUI Builder</span>
+                      <span>{t("builder.modeNoCode")}</span>
                     </button>
 
                     <button
@@ -392,7 +392,7 @@ export const DynamicReportBuilder: React.FC<DynamicReportBuilderProps> = ({
                       }`}
                     >
                       <Code className="w-3.5 h-3.5" />
-                      <span>Low-Code Monaco SQL</span>
+                      <span>{t("builder.modeLowCode")}</span>
                     </button>
                   </div>
 
