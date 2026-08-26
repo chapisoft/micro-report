@@ -127,17 +127,24 @@ export const DynamicLineChart: React.FC<DynamicLineChartProps> = ({ data, config
             }}
           />
           {config.showLegend !== false && <Legend wrapperStyle={{ fontSize: "12px" }} />}
-          {yAxisKeys.map((key, index) => (
-            <Line
-              key={key}
-              type="monotone"
-              dataKey={key}
-              stroke={colors[index % colors.length]}
-              strokeWidth={2.5}
-              dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
-              activeDot={{ r: 6 }}
-            />
-          ))}
+          {yAxisKeys.map((key, index) => {
+            const displayName =
+              key === "commission" || key === "HOA_HONG" || key === "HOA_HONG_THUC_NHAN"
+                ? t("viewer.colTotalRevenue")
+                : key;
+            return (
+              <Line
+                key={key}
+                name={displayName}
+                type="monotone"
+                dataKey={key}
+                stroke={colors[index % colors.length]}
+                strokeWidth={2.5}
+                dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
+                activeDot={{ r: 6 }}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

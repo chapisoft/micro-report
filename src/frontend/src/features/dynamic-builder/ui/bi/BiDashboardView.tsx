@@ -29,15 +29,6 @@ interface BiDashboardViewProps {
   onSwitchToViewer?: () => void;
 }
 
-const SAMPLE_BI_DATA: Record<string, any>[] = [
-  { "TỈNH / THÀNH PHỐ": "Hà Nội", "TỔNG HOA HỒNG": 12450000000, "SỐ ĐƠN VỊ": 128 },
-  { "TỈNH / THÀNH PHỐ": "TP. Hồ Chí Minh", "TỔNG HOA HỒNG": 18320500000, "SỐ ĐƠN VỊ": 156 },
-  { "TỈNH / THÀNH PHỐ": "Đà Nẵng", "TỔNG HOA HỒNG": 6850200000, "SỐ ĐƠN VỊ": 89 },
-  { "TỈNH / THÀNH PHỐ": "Hải Phòng", "TỔNG HOA HỒNG": 7210000000, "SỐ ĐƠN VỊ": 76 },
-  { "TỈNH / THÀNH PHỐ": "Cần Thơ", "TỔNG HOA HỒNG": 4330000000, "SỐ ĐƠN VỊ": 58 },
-];
-
-
 export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
   data: propData,
   columns: propColumns,
@@ -49,19 +40,19 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
   const storeVisual = useReportBuilderStore((s) => s.guiConfig.visualConfig);
   const updateVisualConfig = useReportBuilderStore((s) => s.updateVisualConfig);
 
-  const data =
-    propData ||
-    (storePreview?.rows && storePreview.rows.length > 0
-      ? storePreview.rows
-      : SAMPLE_BI_DATA);
+  const data = React.useMemo(() => {
+    if (propData && propData.length > 0) return propData;
+    if (storePreview?.rows && storePreview.rows.length > 0) return storePreview.rows;
+    return [];
+  }, [propData, storePreview?.rows]);
 
-  const columns =
-    propColumns ||
-    (storePreview?.columns && storePreview.columns.length > 0
-      ? storePreview.columns
-      : storeColumns.length > 0
-      ? storeColumns.map((c) => c.alias || c.columnName)
-      : Object.keys(data[0] || {}));
+  const columns = React.useMemo(() => {
+    if (propColumns && propColumns.length > 0) return propColumns;
+    if (storePreview?.columns && storePreview.columns.length > 0) return storePreview.columns;
+    if (storeColumns.length > 0) return storeColumns.map((c) => c.alias || c.columnName);
+    if (data.length > 0) return Object.keys(data[0]);
+    return [];
+  }, [propColumns, storePreview?.columns, storeColumns, data]);
 
   const numericCols = React.useMemo(() => {
     return columns.filter((col) =>
@@ -186,10 +177,10 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
       <div className="flex items-start justify-between flex-wrap gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Cấu Hình Trực Quan Hóa (BI Dashboard Studio)
+            {t("bi.title")}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Tùy biến hiển thị biểu đồ phân tích và bảng số liệu trực quan cho người dùng cuối.
+            {t("bi.subtitle")}
           </p>
         </div>
 
@@ -199,7 +190,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
             className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition-all active:scale-95 cursor-pointer"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Lưu Cấu Hình BI</span>
+            <span>{t("bi.btnSaveBi")}</span>
           </button>
 
           {onSwitchToViewer && (
@@ -211,7 +202,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
             >
               <Monitor className="w-3.5 h-3.5" />
-              <span>Xem Màn Hình End-User ➔</span>
+              <span>{t("bi.btnSwitchToViewer")}</span>
             </button>
           )}
         </div>
@@ -222,7 +213,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
         {/* CỘT 1 (Trái - 3.5 cols): 1. CHỌN LOẠI BIỂU ĐỒ & MAP TRỤC */}
         <div className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-4">
           <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-            1. Chọn Loại Biểu Đồ
+            {t("bi.step1SelectChart")}
           </div>
 
           {/* 2x2 Grid Chart Type Choice Cards */}
@@ -236,7 +227,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               }`}
             >
               <BarChart3 className="w-5 h-5" />
-              <span>Cột (Bar)</span>
+              <span>{t("bi.chartBarShort")}</span>
             </button>
 
             <button
@@ -248,7 +239,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               }`}
             >
               <LineChartIcon className="w-5 h-5" />
-              <span>Đường (Line)</span>
+              <span>{t("bi.chartLineShort")}</span>
             </button>
 
             <button
@@ -260,7 +251,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               }`}
             >
               <PieChartIcon className="w-5 h-5" />
-              <span>Tròn (Donut)</span>
+              <span>{t("bi.chartPieShort")}</span>
             </button>
 
             <button
@@ -272,14 +263,14 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               }`}
             >
               <TrendingUp className="w-5 h-5" />
-              <span>Thẻ KPI</span>
+              <span>{t("bi.chartKpiShort")}</span>
             </button>
           </div>
 
           {/* Trục X (Dimension) */}
           <div className="space-y-1">
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              Trục Phân Loại (Trục X)
+              {t("bi.xAxisLabel")}
             </label>
             <select
               value={visualConfig.xAxisColumn || ""}
@@ -303,7 +294,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
           {/* Trục Y (Metric) */}
           <div className="space-y-1">
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              Trục Giá Trị / Số Liệu (Trục Y)
+              {t("bi.yAxisLabel")}
             </label>
             <select
               value={visualConfig.yAxisColumns?.[0] || ""}
@@ -318,7 +309,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
             >
               {columns.map((c) => (
                 <option key={c} value={c}>
-                  {c} {numericCols.includes(c) ? "(Số liệu)" : ""}
+                  {c} {numericCols.includes(c) ? t("bi.numericHint") : ""}
                 </option>
               ))}
             </select>
@@ -327,7 +318,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
           {/* Bảng Màu Chủ Đạo */}
           <div className="space-y-1">
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              Bảng Màu Chủ Đạo
+              {t("bi.colorPaletteLabel")}
             </label>
             <select
               value={visualConfig.colorPalette?.[0] === "#059669" ? "emerald" : visualConfig.colorPalette?.[0] === "#ea580c" ? "sunset" : "corporate"}
@@ -346,9 +337,9 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
               }}
               className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
-              <option value="corporate">Xanh Doanh Nghiệp (Corporate Blue)</option>
-              <option value="emerald">Xanh Ngọc Lục Bảo (Emerald Green)</option>
-              <option value="sunset">Cam Hoàng Hôn (Sunset Orange)</option>
+              <option value="corporate">{t("bi.paletteCorporate")}</option>
+              <option value="emerald">{t("bi.paletteEmerald")}</option>
+              <option value="sunset">{t("bi.paletteSunset")}</option>
             </select>
           </div>
         </div>
@@ -359,29 +350,31 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
             <div className="flex flex-col space-y-0.5">
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Xem Trước Biểu Đồ
+                  {t("bi.previewTitle")}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono border border-blue-200 dark:border-blue-800 whitespace-nowrap">
-                  XEM TRƯỚC TRỰC TIẾP
+                  {t("bi.badgeLivePreview")}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {visualConfig.xAxisColumn && visualConfig.yAxisColumns?.[0]
-                  ? `Phân tích ${visualConfig.yAxisColumns[0]} theo ${visualConfig.xAxisColumn}`
-                  : "Trực quan hóa dữ liệu tổng hợp theo thời gian thực"}
+                  ? t("bi.previewDescDynamic")
+                      .replace("{metric}", visualConfig.yAxisColumns[0])
+                      .replace("{dimension}", visualConfig.xAxisColumn)
+                  : t("bi.previewDescDefault")}
               </p>
             </div>
 
             {/* Display limit buttons */}
             <div className="flex items-center space-x-1 text-[11px] shrink-0">
-              <span className="text-slate-400 text-[10px]">Hiển thị:</span>
+              <span className="text-slate-400 text-[10px]">{t("bi.displayLimit")}</span>
               <button
                 onClick={() => setDataLimit(10)}
                 className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
                   dataLimit === 10 ? "bg-blue-700 text-white shadow-xs" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                 }`}
               >
-                Top 10
+                {t("bi.limitPillTop10")}
               </button>
               <button
                 onClick={() => setDataLimit(0)}
@@ -389,7 +382,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
                   dataLimit === 0 ? "bg-blue-700 text-white shadow-xs" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                 }`}
               >
-                Tất Cả
+                {t("bi.limitPillAll")}
               </button>
             </div>
           </div>
@@ -417,15 +410,17 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <span>Đơn vị: <b>{visualConfig.currencyUnit || "VNĐ"}</b> (Click cột để phân tích chi tiết)</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Tổng {displayData.length} dòng</span>
+            <span>{t("bi.unitFootnote")} <b>{visualConfig.currencyUnit || "VNĐ"}</b> {t("bi.clickHint")}</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {t("bi.totalRowsFootnote").replace("{count}", String(displayData.length))}
+            </span>
           </div>
         </div>
 
         {/* CỘT 3 (Phải - 3 cols): 2. TÙY CHỌN HIỂN THỊ */}
         <div className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-4">
           <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-            2. Tùy Chọn Hiển Thị
+            {t("bi.step2DisplayOptions")}
           </div>
 
           <div className="space-y-2.5">
@@ -436,7 +431,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
                 onChange={(e) => setVisualConfig((prev) => ({ ...prev, showLegend: e.target.checked }))}
                 className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
               />
-              <span>Hiển thị chú giải số liệu</span>
+              <span>{t("bi.optShowLegend")}</span>
             </label>
 
             <label className="flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -446,7 +441,7 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
                 onChange={(e) => setVisualConfig((prev) => ({ ...prev, showGrid: e.target.checked }))}
                 className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
               />
-              <span>Hiển thị đường lưới</span>
+              <span>{t("bi.optShowGrid")}</span>
             </label>
 
             <label className="flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -455,21 +450,21 @@ export const BiDashboardView: React.FC<BiDashboardViewProps> = ({
                 defaultChecked
                 className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
               />
-              <span>Cho phép Drill-down chi tiết</span>
+              <span>{t("bi.optAllowDrillDown")}</span>
             </label>
           </div>
 
           <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              Định dạng số
+              {t("bi.numberFormat")}
             </label>
             <select
               value={visualConfig.numberFormat || "full"}
               onChange={(e) => setVisualConfig((prev) => ({ ...prev, numberFormat: e.target.value as any }))}
               className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500"
             >
-              <option value="full">Đầy đủ (12.450.000.000)</option>
-              <option value="compact">Dạng rút gọn (1.2B / 500M)</option>
+              <option value="full">{t("bi.formatFullLabel")}</option>
+              <option value="compact">{t("bi.formatCompactLabel")}</option>
             </select>
           </div>
         </div>

@@ -216,8 +216,9 @@ pipeline {
                         # 2. Tạo thư mục persistent trên Host cho Metadata DB
                         mkdir -p /home/dip/data/report_metadata_db 2>/dev/null || true
 
-                        # 3. Đồng bộ Virtual Host Nginx lên Gateway nếu có thay đổi
+                        # 3. Luôn luôn đồng bộ Virtual Host Nginx lên Gateway
                         if [ -f "deploy/nginx/host-report-vhost.conf" ]; then
+                            echo "  📋 Cập nhật cấu hình Virtual Host Nginx..."
                             cp deploy/nginx/host-report-vhost.conf /home/dip/dip/deploy/gateway/config/conf.d/micro-report.conf 2>/dev/null || true
                         fi
 
@@ -239,14 +240,18 @@ pipeline {
                             docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --remove-orphans
                         fi
 
-                        # 5. Reload Nginx Gateway nếu Gateway config thay đổi
-                        if [ "${CHANGED_GATEWAY}" = "true" ]; then
-                            NGINX_ID=$(docker ps -q --filter 'name=gateway_stack_nginx')
+                        # 5. Luôn luôn Reload Nginx Gateway sau mỗi lần deploy (Bảo đảm Zero-Downtime, không bị 502)
+                        echo "🔄 Reload toàn bộ Nginx Gateway Replicas để nhận diện container mới..."
+                        NGINX_IDS=$(docker ps -q --filter 'name=gateway_stack_nginx' 2>/dev/null || true)
+                        if [ -z "$NGINX_IDS" ]; then
+                            NGINX_IDS=$(docker ps -q --filter 'name=nginx' 2>/dev/null || true)
+                        fi
+                        for NGINX_ID in $NGINX_IDS; do
                             if [ -n "$NGINX_ID" ]; then
-                                echo "🔄 Reloading Gateway Nginx..."
+                                echo "  -> Reloading Nginx container $NGINX_ID..."
                                 docker exec $NGINX_ID nginx -t && docker exec $NGINX_ID nginx -s reload || true
                             fi
-                        fi
+                        done
 
                         echo ""
                         echo "📊 Trạng thái hiện tại của toàn bộ Micro-Report Containers:"
@@ -270,11 +275,16 @@ pipeline {
 
                         check_http() {
                             local url="$1"
-                            curl -s --connect-timeout 2 --max-time 4 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            local host_header="$2"
+                            if [ -n "$host_header" ]; then
+                                curl -s --connect-timeout 2 --max-time 4 -H "Host: $host_header" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            else
+                                curl -s --connect-timeout 2 --max-time 4 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            fi
                         }
 
                         for i in $(seq 1 15); do
-                            # 1. Kiểm tra Backend
+                            # 1. Kiểm tra Backend (Trực tiếp container & qua Domain Nginx)
                             STATUS_BE=$(check_http "http://micro-report-backend:8080/actuator/health")
                             if [ "$STATUS_BE" != "200" ]; then
                                 STATUS_BE=$(check_http "http://172.18.0.1:8088/actuator/health")
@@ -282,14 +292,20 @@ pipeline {
                             if [ "$STATUS_BE" != "200" ]; then
                                 STATUS_BE=$(check_http "http://localhost:8088/actuator/health")
                             fi
+                            if [ "$STATUS_BE" != "200" ]; then
+                                STATUS_BE=$(check_http "http://localhost/actuator/health" "rpe.microtec.vn")
+                            fi
                             
-                            # 2. Kiểm tra Frontend
+                            # 2. Kiểm tra Frontend (Trực tiếp container & qua Domain Nginx)
                             STATUS_FE=$(check_http "http://micro-report-frontend:3000")
                             if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
                                 STATUS_FE=$(check_http "http://172.18.0.1:3008")
                             fi
                             if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
                                 STATUS_FE=$(check_http "http://localhost:3008")
+                            fi
+                            if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
+                                STATUS_FE=$(check_http "http://localhost/" "rpf.microtec.vn")
                             fi
 
                             if [ "$STATUS_BE" = "200" ] || [ "$STATUS_BE" = "302" ]; then
