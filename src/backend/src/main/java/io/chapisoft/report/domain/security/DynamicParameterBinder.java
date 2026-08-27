@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,9 +30,10 @@ public class DynamicParameterBinder {
 
         // 1. Tự động đăng ký toàn bộ inputParams vào paramSource theo cả 2 dạng: key và param_key
         for (Map.Entry<String, Object> entry : safeParams.entrySet()) {
-            if (entry.getKey() != null) {
-                paramSource.addValue(entry.getKey(), entry.getValue());
-                paramSource.addValue("param_" + entry.getKey(), entry.getValue());
+            String key = entry.getKey();
+            if (key != null) {
+                paramSource.addValue(Objects.requireNonNull(key), entry.getValue());
+                paramSource.addValue("param_" + key, entry.getValue());
             }
         }
 
@@ -40,10 +42,11 @@ public class DynamicParameterBinder {
         if (ctx != null) {
             Map<String, Object> dataScope = ctx.getDataScope();
             for (Map.Entry<String, Object> entry : dataScope.entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null) {
-                    String scopeKey = ReportConstants.SCOPE_PARAM_PREFIX + entry.getKey();
-                    paramSource.addValue(scopeKey, entry.getValue());
-                    safeParams.put(scopeKey, entry.getValue());
+                String scopeKey = entry.getKey();
+                if (scopeKey != null && entry.getValue() != null) {
+                    String fullScopeKey = ReportConstants.SCOPE_PARAM_PREFIX + scopeKey;
+                    paramSource.addValue(fullScopeKey, entry.getValue());
+                    safeParams.put(fullScopeKey, entry.getValue());
                 }
             }
         }
@@ -52,7 +55,7 @@ public class DynamicParameterBinder {
         Matcher scopeMatcher = SCOPE_PATTERN.matcher(rawSql);
         StringBuilder scopeBuffer = new StringBuilder();
         while (scopeMatcher.find()) {
-            String scopeKey = scopeMatcher.group(1);
+            String scopeKey = Objects.requireNonNull(scopeMatcher.group(1));
             String namedParam = ReportConstants.SCOPE_PARAM_PREFIX + scopeKey;
             Object scopeVal = (ctx != null) ? ctx.getDataScope().get(scopeKey) : null;
 
@@ -69,7 +72,7 @@ public class DynamicParameterBinder {
         StringBuilder finalSqlBuffer = new StringBuilder();
 
         while (paramMatcher.find()) {
-            String paramName = paramMatcher.group(1);
+            String paramName = Objects.requireNonNull(paramMatcher.group(1));
             Object paramValue = safeParams.get(paramName);
             String namedParam = "param_" + paramName;
 
@@ -84,7 +87,7 @@ public class DynamicParameterBinder {
         // 5. Quét tất cả các tham số định dạng chuẩn SQL Named Parameter (:paramName) còn lại trong câu truy vấn
         Matcher namedMatcher = NAMED_PARAM_PATTERN.matcher(finalSql);
         while (namedMatcher.find()) {
-            String paramName = namedMatcher.group(1);
+            String paramName = Objects.requireNonNull(namedMatcher.group(1));
             if (!paramSource.hasValue(paramName)) {
                 if (safeParams.containsKey(paramName)) {
                     paramSource.addValue(paramName, safeParams.get(paramName));

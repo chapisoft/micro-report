@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -77,9 +76,10 @@ class DataSourcePermissionTest {
 
         ResponseEntity<List<DataSourceDto>> response = controller.listDataSources(null, null);
 
-        assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().size());
-        assertEquals("DIP_DWH", response.getBody().get(0).getDatasourceCode());
+        List<DataSourceDto> body = response.getBody();
+        assertNotNull(body);
+        assertEquals(1, body.size());
+        assertEquals("DIP_DWH", body.get(0).getDatasourceCode());
     }
 
     @Test

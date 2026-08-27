@@ -21,7 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -242,13 +249,13 @@ public class QueryExecutionService {
         if (val == null) {
             return null;
         }
-        if (val instanceof java.sql.Timestamp || val instanceof java.sql.Date || val instanceof java.sql.Time) {
+        if (val instanceof Timestamp || val instanceof Date || val instanceof Time) {
             return val.toString();
         }
-        if (val instanceof java.sql.Clob clob) {
+        if (val instanceof Clob clob) {
             return clob.getSubString(1, (int) Math.min(clob.length(), 4000));
         }
-        if (val instanceof java.sql.Blob blob) {
+        if (val instanceof Blob blob) {
             return "[BLOB " + blob.length() + " bytes]";
         }
         if (val instanceof byte[] bytes) {

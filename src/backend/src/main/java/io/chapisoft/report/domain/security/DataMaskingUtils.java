@@ -12,7 +12,6 @@ public final class DataMaskingUtils {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(\\+?84|0)(3|5|7|8|9)[0-9]{8}$");
-    private static final Pattern CCCD_PATTERN = Pattern.compile("^[0-9]{9,12}$");
 
     private DataMaskingUtils() {
         // Utility class
