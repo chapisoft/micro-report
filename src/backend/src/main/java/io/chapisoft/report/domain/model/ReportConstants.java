@@ -10,16 +10,36 @@ public final class ReportConstants {
     public static final String FILTER_ALL = "all";
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";
     public static final String HEADER_API_KEY = "X-API-Key";
+    public static final String HEADER_DATA_SCOPE = "X-Data-Scope";
+    public static final String HEADER_ALLOWED_DATASOURCES = "X-Allowed-DataSources";
+    public static final String HEADER_BRANCH_ID = "X-Branch-Id";
+    public static final String HEADER_PROVINCE_CODE = "X-Province-Code";
     public static final String BEARER_PREFIX = "Bearer ";
 
     public static final String CLAIM_TENANT_ID = "tenant_id";
     public static final String CLAIM_USER_NAME = "user_name";
     public static final String CLAIM_ROLES = "roles";
+    public static final String CLAIM_DATA_SCOPE = "data_scope";
+    public static final String CLAIM_ALLOWED_DATASOURCES = "allowed_datasources";
+    public static final String CLAIM_BRANCH_ID = "branch_id";
+    public static final String CLAIM_PROVINCE_CODE = "province_code";
 
     public static final String CREATED_BY_SYSTEM = "SYSTEM";
     public static final String CREATED_BY_ANONYMOUS = "ANONYMOUS";
     public static final String DEFAULT_SYSTEM_USER_NAME = "System User";
     public static final String DEFAULT_ROLE_USER = "USER";
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
+    public static final String ROLE_DATA_MANAGER = "DATA_MANAGER";
+
+    public static final String SCOPE_PARAM_PREFIX = "scope_";
+    public static final String SCOPE_BRANCH_ID = "branch_id";
+    public static final String SCOPE_PROVINCE_CODE = "province_code";
+    public static final String SCOPE_ALL = "all";
+
+    public static final String DEFAULT_MENU_CATEGORY = "Báo cáo nghiệp vụ";
+    public static final String DEFAULT_MENU_ICON = "FileText";
+    public static final String DEFAULT_MENU_PATH_PREFIX = "/reports/custom/";
 
     public static final int DEFAULT_MAX_POOL_SIZE = 10;
     public static final int DEFAULT_HIKARI_MAX_POOL_SIZE_FALLBACK = 5;

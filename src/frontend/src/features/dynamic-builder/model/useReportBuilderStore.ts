@@ -3,12 +3,15 @@ import { defaultApiClient, ReportBuilderApiClient } from "../api/reportBuilderAp
 import {
   AggregationType,
   BUILDER_CONSTANTS,
+  ChartType,
   DataSource,
   FilterCondition,
   JoinRelation,
   QueryMode,
   QueryPreviewResponse,
   ReportTemplate,
+  ReportTemplateMetadata,
+  ReportVisualConfig,
   SchemaInfo,
   SelectedColumn,
   TableInfo,
@@ -17,11 +20,31 @@ import {
   VisualGuiConfig,
 } from "./types";
 
+
 const initialGuiConfig: VisualGuiConfig = {
   primaryTable: "",
   columns: [],
   joins: [],
   filters: [],
+  dynamicParams: [],
+  metadata: {
+    title: "",
+    templateCode: "",
+    description: "",
+    category: "GENERAL",
+    defaultViewMode: "BOTH",
+  },
+  visualConfig: {
+    chartType: ChartType.BAR,
+    chartTitle: "Biểu Đồ Trực Quan Báo Cáo",
+    xAxisKey: "",
+    yAxisKey: "",
+    showValueLabel: true,
+    showGrid: true,
+    colorPalette: "corporate",
+    numberFormat: "full",
+    currencyUnit: "VNĐ",
+  },
   groupBy: [],
   orderBy: [],
   limit: BUILDER_CONSTANTS.DEFAULT_PREVIEW_LIMIT,
@@ -75,19 +98,53 @@ interface ReportBuilderState {
   setTransformJs: (transformJs: string) => void;
   clearPreview: () => void;
 
-  // Visual GUI Actions
+  // 1. Metadata Actions
+  updateMetadata: (metadata: Partial<VisualGuiConfig["metadata"]>) => void;
+
+  // 2. Visual GUI Actions
   setPrimaryTable: (tableName: string) => void;
-  toggleColumnSelection: (tableName: string, columnName: string) => void;
+  toggleColumnSelection: (tableName: string, columnName: string, dataType?: string) => void;
+  addFormulaColumn: (alias: string, formulaExpression: string, dataType?: string) => void;
   updateColumnAlias: (id: string, alias: string) => void;
   updateColumnAggregation: (
     id: string,
     aggregation: SelectedColumn["aggregation"]
   ) => void;
+  updateColumnFormula: (id: string, formulaExpression: string) => void;
   removeColumn: (id: string) => void;
+  reorderColumns: (startIndex: number, endIndex: number) => void;
+
+  // 3. JOIN Actions
   addJoinRelation: (join: JoinRelation) => void;
+  updateJoinRelation: (id: string, updates: Partial<JoinRelation>) => void;
   removeJoinRelation: (id: string) => void;
+
+  // 4. Filter & Dynamic Params Actions
   addFilterCondition: (filter: FilterCondition) => void;
+  updateFilterCondition: (id: string, updates: Partial<FilterCondition>) => void;
   removeFilterCondition: (filterId: string) => void;
+  addDynamicParam: (param: {
+    id: string;
+    name: string;
+    label: string;
+    type: "Date" | "Dropdown" | "Text" | "Number";
+    defaultValue: string;
+    isRequired: boolean;
+  }) => void;
+  updateDynamicParam: (
+    id: string,
+    updates: Partial<{
+      name: string;
+      label: string;
+      type: "Date" | "Dropdown" | "Text" | "Number";
+      defaultValue: string;
+      isRequired: boolean;
+    }>
+  ) => void;
+  removeDynamicParam: (id: string) => void;
+
+  // 5. Visual Config Actions
+  updateVisualConfig: (config: Partial<NonNullable<VisualGuiConfig["visualConfig"]>>) => void;
 
   // Execution & Converters
   convertGuiToSql: () => string;
@@ -95,6 +152,7 @@ interface ReportBuilderState {
   saveCurrentTemplate: (name: string, code: string) => Promise<ReportTemplate>;
   loadTemplate: (template: ReportTemplate) => void;
 }
+
 
 export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
   engineUrl: "",
@@ -145,10 +203,17 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
       const dsList = await client.getDataSources(filterDs);
       set({ datasources: dsList });
 
+      const currentActive = get().activeDatasourceCode;
+      const isCurrentValid = dsList.some((ds) => ds.datasourceCode === currentActive);
+
       const targetDsCode =
+        (isCurrentValid && currentActive) ||
         defaultDatasourceCode ||
         (dsList.length > 0 ? dsList[0].datasourceCode : "");
-      if (targetDsCode) {
+
+      if (targetDsCode && targetDsCode !== currentActive) {
+        await get().setActiveDatasource(targetDsCode);
+      } else if (targetDsCode && !get().schemaInfo) {
         await get().setActiveDatasource(targetDsCode);
       }
     } catch (err: any) {
@@ -185,15 +250,23 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     });
     try {
       const schema = await get().apiClient.getSchema(code);
+      const firstTableName = schema.tables.length > 0 ? schema.tables[0].tableName : "";
       set((state) => ({
         schemaInfo: schema,
         schemaCache: { ...state.schemaCache, [code]: schema },
         isLoadingSchema: false,
         selectedTable: schema.tables.length > 0 ? schema.tables[0] : null,
+        guiConfig: {
+          primaryTable: firstTableName,
+          columns: [],
+          joins: [],
+          filters: [],
+          groupBy: [],
+          orderBy: [],
+          limit: 50,
+        },
+        previewData: null,
       }));
-      if (schema.tables.length > 0 && !get().guiConfig.primaryTable) {
-        get().setPrimaryTable(schema.tables[0].tableName);
-      }
     } catch (err: any) {
       set({
         schemaInfo: null,
@@ -212,6 +285,23 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
   setTransformJs: (transformJs) => set({ transformJs }),
   clearPreview: () => set({ previewData: null }),
 
+  updateMetadata: (metadataUpdates) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        metadata: {
+          title: state.guiConfig.metadata?.title || "",
+          templateCode: state.guiConfig.metadata?.templateCode || "",
+          description: state.guiConfig.metadata?.description || "",
+          category: state.guiConfig.metadata?.category || "GENERAL",
+          defaultViewMode: state.guiConfig.metadata?.defaultViewMode || "BOTH",
+          ...metadataUpdates,
+        },
+      },
+    }));
+  },
+
+
   setPrimaryTable: (tableName) => {
     set((state) => ({
       guiConfig: {
@@ -222,7 +312,7 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     }));
   },
 
-  toggleColumnSelection: (tableName, columnName) => {
+  toggleColumnSelection: (tableName, columnName, dataType) => {
     set((state) => {
       const exists = state.guiConfig.columns.find(
         (c) => c.tableName === tableName && c.columnName === columnName
@@ -239,6 +329,8 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
           id: `${tableName}_${columnName}_${Date.now()}`,
           tableName,
           columnName,
+          alias: columnName,
+          dataType: dataType || "VARCHAR",
           aggregation: AggregationType.NONE,
         };
         return {
@@ -248,6 +340,27 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
           },
         };
       }
+    });
+  },
+
+  addFormulaColumn: (alias, formulaExpression, dataType = "NUMBER") => {
+    set((state) => {
+      const newCol: SelectedColumn = {
+        id: `formula_${Date.now()}`,
+        tableName: state.guiConfig.primaryTable || "calc",
+        columnName: alias,
+        alias,
+        dataType,
+        isFormula: true,
+        formulaExpression,
+        aggregation: AggregationType.NONE,
+      };
+      return {
+        guiConfig: {
+          ...state.guiConfig,
+          columns: [...state.guiConfig.columns, newCol],
+        },
+      };
     });
   },
 
@@ -273,6 +386,17 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     }));
   },
 
+  updateColumnFormula: (id, formulaExpression) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        columns: state.guiConfig.columns.map((c) =>
+          c.id === id ? { ...c, formulaExpression } : c
+        ),
+      },
+    }));
+  },
+
   removeColumn: (id) => {
     set((state) => ({
       guiConfig: {
@@ -282,11 +406,36 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     }));
   },
 
+  reorderColumns: (startIndex, endIndex) => {
+    set((state) => {
+      const result = Array.from(state.guiConfig.columns);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return {
+        guiConfig: {
+          ...state.guiConfig,
+          columns: result,
+        },
+      };
+    });
+  },
+
   addJoinRelation: (join) => {
     set((state) => ({
       guiConfig: {
         ...state.guiConfig,
         joins: [...state.guiConfig.joins, join],
+      },
+    }));
+  },
+
+  updateJoinRelation: (id, updates) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        joins: state.guiConfig.joins.map((j) =>
+          j.id === id ? { ...j, ...updates } : j
+        ),
       },
     }));
   },
@@ -309,11 +458,73 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     }));
   },
 
+  updateFilterCondition: (id, updates) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        filters: state.guiConfig.filters.map((f) =>
+          f.id === id ? { ...f, ...updates } : f
+        ),
+      },
+    }));
+  },
+
   removeFilterCondition: (filterId: string) => {
     set((state) => ({
       guiConfig: {
         ...state.guiConfig,
         filters: state.guiConfig.filters.filter((f) => f.id !== filterId),
+      },
+    }));
+  },
+
+  addDynamicParam: (param) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        dynamicParams: [...(state.guiConfig.dynamicParams || []), param],
+      },
+    }));
+  },
+
+  updateDynamicParam: (id, updates) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        dynamicParams: (state.guiConfig.dynamicParams || []).map((p) =>
+          p.id === id ? { ...p, ...updates } : p
+        ),
+      },
+    }));
+  },
+
+  removeDynamicParam: (id) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        dynamicParams: (state.guiConfig.dynamicParams || []).filter((p) => p.id !== id),
+      },
+    }));
+  },
+
+  updateVisualConfig: (configUpdates) => {
+    set((state) => ({
+      guiConfig: {
+        ...state.guiConfig,
+        visualConfig: {
+          ...(state.guiConfig.visualConfig || {
+            chartType: ChartType.BAR,
+            chartTitle: "Biểu Đồ Trực Quan Báo Cáo",
+            xAxisKey: "",
+            yAxisKey: "",
+            showValueLabel: true,
+            showGrid: true,
+            colorPalette: "corporate",
+            numberFormat: "full",
+            currencyUnit: "VNĐ",
+          }),
+          ...configUpdates,
+        },
       },
     }));
   },
@@ -328,10 +539,15 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     if (guiConfig.columns.length > 0) {
       selectExprs = guiConfig.columns
         .map((col) => {
-          const colFull = `${col.tableName}.${col.columnName}`;
-          let expr = colFull;
-          if (col.aggregation && col.aggregation !== AggregationType.NONE) {
-            expr = `${col.aggregation}(${colFull})`;
+          let expr = "";
+          if (col.isFormula && col.formulaExpression) {
+            expr = col.formulaExpression;
+          } else {
+            const colFull = `${col.tableName}.${col.columnName}`;
+            expr = colFull;
+            if (col.aggregation && col.aggregation !== AggregationType.NONE) {
+              expr = `${col.aggregation}(${colFull})`;
+            }
           }
           if (col.alias && col.alias !== col.columnName) {
             const cleanAlias = col.alias.trim().replace(/"/g, "");
@@ -367,14 +583,12 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
     otherTablesWithCols.forEach((otherTableName) => {
       const otherTableObj = tables.find((t) => t.tableName === otherTableName);
       if (primaryTableObj && otherTableObj) {
-        // 1. Tìm cột trùng tên (ví dụ: dossier_id, agent_user_id, id)
         const commonCol = primaryTableObj.columns.find((pc) =>
           otherTableObj.columns.some((oc) => oc.columnName === pc.columnName)
         );
         if (commonCol) {
           sql += `\nLEFT JOIN ${otherTableName} ON ${guiConfig.primaryTable}.${commonCol.columnName} = ${otherTableName}.${commonCol.columnName}`;
         } else {
-          // 2. Tìm theo khóa ngoại pattern [table]_id
           const fkInPrimary = primaryTableObj.columns.find(
             (c) => c.columnName === `${otherTableName}_id` || c.columnName === "id"
           );
@@ -388,25 +602,46 @@ export const useReportBuilderStore = create<ReportBuilderState>((set, get) => ({
       }
     });
 
+    const whereClauses: string[] = [];
+
+    // Static Filters
     if (guiConfig.filters && guiConfig.filters.length > 0) {
-      const whereClauses = guiConfig.filters.map((f, idx) => {
+      guiConfig.filters.forEach((f, idx) => {
         const val =
           f.operator === "IS NULL" || f.operator === "IS NOT NULL"
             ? ""
-            : f.value.startsWith("{{")
+            : f.value.startsWith("{{") || f.value.startsWith(":")
             ? f.value
             : `'${f.value}'`;
         const clause = `${f.tableName}.${f.columnName} ${f.operator} ${val}`.trim();
-        return idx === 0 ? clause : `${f.logic} ${clause}`;
+        whereClauses.push(idx === 0 ? clause : `${f.logic} ${clause}`);
       });
+    }
+
+    // Dynamic Parameters (:param IS NULL OR col = :param)
+    if (guiConfig.dynamicParams && guiConfig.dynamicParams.length > 0) {
+      guiConfig.dynamicParams.forEach((dp) => {
+        const paramVar = `:${dp.name}`;
+        // Tìm cột liên kết nếu có, hoặc tạo mệnh đề parameterized
+        const targetCol = `${guiConfig.primaryTable}.${dp.name}`;
+        const paramClause = `(${paramVar} IS NULL OR ${targetCol} = ${paramVar})`;
+        if (whereClauses.length === 0) {
+          whereClauses.push(paramClause);
+        } else {
+          whereClauses.push(`AND ${paramClause}`);
+        }
+      });
+    }
+
+    if (whereClauses.length > 0) {
       sql += `\nWHERE ${whereClauses.join(" ")}`;
     }
 
     const hasAgg = guiConfig.columns.some(
-      (c) => c.aggregation && c.aggregation !== AggregationType.NONE
+      (c) => !c.isFormula && c.aggregation && c.aggregation !== AggregationType.NONE
     );
     const nonAggCols = guiConfig.columns.filter(
-      (c) => !c.aggregation || c.aggregation === AggregationType.NONE
+      (c) => !c.isFormula && (!c.aggregation || c.aggregation === AggregationType.NONE)
     );
     if (hasAgg && nonAggCols.length > 0) {
       const groupExprs = nonAggCols.map((c) => `${c.tableName}.${c.columnName}`);

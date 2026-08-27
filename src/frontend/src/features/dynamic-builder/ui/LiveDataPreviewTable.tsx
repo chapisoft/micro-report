@@ -20,11 +20,13 @@ import { useReportBuilderStore } from "../model/useReportBuilderStore";
 import { t } from "../../../shared/locales";
 
 interface LiveDataPreviewTableProps {
+  height?: number;
   onOpenExportModal?: () => void;
   onOpenAuth?: () => void;
 }
 
 export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
+  height = 340,
   onOpenAuth,
 }) => {
   const {
@@ -65,7 +67,10 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
     selectedRows.size === previewData.rows.length;
 
   return (
-    <div className="h-80 flex flex-col bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <div
+      style={{ height: `${height}px` }}
+      className="flex flex-col bg-white dark:bg-slate-900 shrink-0 min-h-0"
+    >
       {/* Table & BI View Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shrink-0">
         <div className="flex items-center space-x-3">
@@ -258,8 +263,8 @@ export const LiveDataPreviewTable: React.FC<LiveDataPreviewTableProps> = ({
                 <span>{previewData.executionTimeMs} ms</span>
               </span>
               <span>•</span>
-              <span className="flex items-center space-x-1 text-slate-400">
-                <Activity className="w-3.5 h-3.5 text-purple-500" />
+              <span className="flex items-center space-x-1 text-slate-500 dark:text-slate-400">
+                <Activity className="w-3.5 h-3.5 text-blue-500" />
                 <span>{previewData.columns.length} cột</span>
               </span>
             </>

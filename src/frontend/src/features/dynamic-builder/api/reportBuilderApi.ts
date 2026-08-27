@@ -161,6 +161,21 @@ export class ReportBuilderApiClient {
     return res.data;
   }
 
+  public async downloadExportFile(taskCode: string, fileName?: string): Promise<void> {
+    const res = await this.client.get(`/api/v1/reports/export/download/${taskCode}`, {
+      responseType: "blob",
+    });
+    const blob = new Blob([res.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName || `Report_${taskCode}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
   public async manualDwhSync(payload: {
     datasourceCode: string;
     tableName?: string;

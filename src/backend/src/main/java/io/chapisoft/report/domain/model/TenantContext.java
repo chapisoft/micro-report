@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -19,6 +21,8 @@ public class TenantContext {
     private String userId;
     private String userName;
     private Set<String> roles;
+    private Map<String, Object> dataScope;
+    private Set<String> allowedDataSources;
 
     public static TenantContext get() {
         return CURRENT_TENANT.get();
@@ -35,5 +39,26 @@ public class TenantContext {
     public static String getTenantIdOrDefault() {
         TenantContext ctx = CURRENT_TENANT.get();
         return ctx != null && ctx.getTenantId() != null ? ctx.getTenantId() : ReportConstants.DEFAULT_TENANT_ID;
+    }
+
+    public boolean isAdmin() {
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
+        return roles.stream().anyMatch(r -> 
+            ReportConstants.ROLE_ADMIN.equalsIgnoreCase(r)
+            || ReportConstants.ROLE_SUPER_ADMIN.equalsIgnoreCase(r)
+            || ReportConstants.ROLE_DATA_MANAGER.equalsIgnoreCase(r)
+            || "ROLE_ADMIN".equalsIgnoreCase(r)
+            || "ROLE_SUPER_ADMIN".equalsIgnoreCase(r)
+        );
+    }
+
+    public Map<String, Object> getDataScope() {
+        return dataScope != null ? dataScope : Collections.emptyMap();
+    }
+
+    public Set<String> getAllowedDataSources() {
+        return allowedDataSources != null ? allowedDataSources : Collections.emptySet();
     }
 }

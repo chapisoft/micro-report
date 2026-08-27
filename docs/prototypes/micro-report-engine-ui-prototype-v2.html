@@ -1,0 +1,3648 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Micro-Report Studio v4.0 — Nền Tảng Báo Cáo Động Chuẩn Enterprise</title>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       ENTERPRISE DESIGN SYSTEM & CSS VARIABLES
+       ========================================================================== */
+    :root {
+      /* Corporate Blue Palette */
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-subtle: #eff6ff;
+      --primary-border: #bfdbfe;
+      
+      --secondary: #475569;
+      --secondary-hover: #334155;
+      
+      --success: #059669;
+      --success-subtle: #ecfdf5;
+      --success-border: #a7f3d0;
+      
+      --warning: #d97706;
+      --warning-subtle: #fffbeb;
+      --warning-border: #fde68a;
+      
+      --danger: #dc2626;
+      --danger-subtle: #fef2f2;
+      --danger-border: #fecaca;
+      
+      --purple: #7c3aed;
+      --purple-subtle: #f5f3ff;
+      --purple-border: #ddd6fe;
+
+      /* Neutral Palette (Light Mode Default) */
+      --bg-app: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-hover: #f1f5f9;
+      --bg-input: #ffffff;
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --text-inverse: #ffffff;
+      
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --border-focus: #3b82f6;
+      
+      /* Crisp Elevation */
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      
+      --transition-base: 0.15s ease-in-out;
+    }
+
+    [data-theme="dark"] {
+      --bg-app: #0b0f19;
+      --bg-surface: #111827;
+      --bg-subtle: #172033;
+      --bg-hover: #1e293b;
+      --bg-input: #0f172a;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      
+      --border-light: #1e293b;
+      --border-medium: #334155;
+      --border-focus: #3b82f6;
+      
+      --primary-subtle: rgba(37, 99, 235, 0.15);
+      --primary-border: rgba(37, 99, 235, 0.3);
+      
+      --success-subtle: rgba(5, 150, 105, 0.15);
+      --success-border: rgba(5, 150, 105, 0.3);
+      
+      --danger-subtle: rgba(220, 38, 38, 0.15);
+      --danger-border: rgba(220, 38, 38, 0.3);
+      
+      --warning-subtle: rgba(217, 119, 6, 0.15);
+      --warning-border: rgba(217, 119, 6, 0.3);
+
+      --purple-subtle: rgba(124, 58, 237, 0.15);
+      --purple-border: rgba(124, 58, 237, 0.3);
+      
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-sans);
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      outline: none;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-subtle);
+    }
+
+    /* ==========================================================================
+       TOPBAR NAVIGATION
+       ========================================================================== */
+    .topbar {
+      height: 56px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--primary);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .brand-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-main);
+      letter-spacing: -0.2px;
+    }
+
+    .badge-tenant {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      text-transform: uppercase;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--success);
+    }
+
+    /* Mode Segmented Controls */
+    .mode-switch {
+      display: flex;
+      align-items: center;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      gap: 2px;
+    }
+
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all var(--transition-base);
+      white-space: nowrap;
+    }
+
+    .mode-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-main);
+    }
+
+    .mode-btn.active {
+      background: var(--bg-surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-xs);
+      border: 1px solid var(--border-light);
+    }
+
+    /* Top Actions */
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      transition: all var(--transition-base);
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      border-color: var(--border-medium);
+    }
+
+    .btn-icon svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      transition: all var(--transition-base);
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      border-color: var(--border-medium);
+      color: var(--text-main);
+      box-shadow: var(--shadow-xs);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-subtle);
+      border-color: #94a3b8;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: var(--shadow-xs);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-sm {
+      height: 28px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-danger-text {
+      color: var(--text-subtle);
+    }
+    .btn-danger-text:hover {
+      color: var(--danger);
+    }
+
+    /* ==========================================================================
+       APP LAYOUT & WORKSPACE
+       ========================================================================== */
+    .app-container {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      min-height: calc(100vh - 56px);
+      margin-top: 56px;
+    }
+
+    /* Sidebar Metadata Tree & Multi-DataSource */
+    .sidebar {
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 56px);
+      position: sticky;
+      top: 56px;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .sidebar-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ds-selector-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ds-select {
+      width: 100%;
+      height: 32px;
+      padding: 0 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }
+    .ds-select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .sidebar-search {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      height: 30px;
+      padding: 0 10px 0 28px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color var(--transition-base);
+    }
+    .sidebar-search input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .sidebar-search svg {
+      position: absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 13px;
+      height: 13px;
+      color: var(--text-subtle);
+      pointer-events: none;
+    }
+
+    .tree-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 8px 20px;
+    }
+
+    .tree-table-group {
+      margin-bottom: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .tree-table-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: background var(--transition-base);
+      gap: 6px;
+    }
+
+    .tree-table-header:hover {
+      background: var(--bg-subtle);
+    }
+
+    .tree-table-header .chevron {
+      width: 12px;
+      height: 12px;
+      color: var(--text-subtle);
+      transition: transform var(--transition-base);
+    }
+    .tree-table-group.expanded .chevron {
+      transform: rotate(90deg);
+    }
+
+    .tree-table-header .table-icon {
+      color: var(--text-muted);
+      width: 14px;
+      height: 14px;
+    }
+
+    .tree-table-header .table-name {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tree-table-header .table-tag {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border-light);
+    }
+
+    .tree-columns-list {
+      display: none;
+      padding: 2px 4px 6px 20px;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .tree-table-group.expanded .tree-columns-list {
+      display: flex;
+    }
+
+    .tree-col-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      user-select: none;
+    }
+
+    .tree-col-item:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+    }
+
+    .tree-col-item.selected {
+      background: var(--primary-subtle);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .col-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .col-icon {
+      width: 11px;
+      height: 11px;
+      color: var(--text-subtle);
+    }
+    .tree-col-item.selected .col-icon {
+      color: var(--primary);
+    }
+
+    .col-type-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: 1px solid var(--border-light);
+    }
+
+    /* Workspace Content Area */
+    .workspace {
+      padding: 20px 24px 60px;
+      overflow-y: auto;
+      max-width: 1480px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .page-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-title-group h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .page-title-group p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--warning-subtle);
+      color: #92400e;
+      border: 1px solid var(--warning-border);
+    }
+
+    .security-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--success-subtle);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    /* Views */
+    .view-panel {
+      display: none;
+    }
+    .view-panel.active {
+      display: block;
+    }
+
+    /* ==========================================================================
+       BUILDER SECTIONS & FORM CARDS
+       ========================================================================== */
+    .builder-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .dual-mode-header-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .builder-mode-pills {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      padding: 2px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      gap: 2px;
+    }
+
+    .b-mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .b-mode-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .section-block {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .section-block:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .step-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .section-hint {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Grid & Form Controls */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .form-label .required {
+      color: var(--danger);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      height: 32px;
+      padding: 0 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color var(--transition-base);
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Monaco SQL Studio Mode */
+    .sql-studio-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .monaco-mock-editor {
+      background: #0f172a;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #38bdf8;
+      min-height: 240px;
+      resize: vertical;
+      outline: none;
+      width: 100%;
+      border: none;
+    }
+
+    .sql-helper-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: var(--bg-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .sql-chip-btn {
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+    .sql-chip-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* JOIN Builder Component */
+    .join-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .join-row-card {
+      display: grid;
+      grid-template-columns: 120px 1.2fr 1fr 1fr 32px;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-trash {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      color: var(--text-subtle);
+      display: grid;
+      place-items: center;
+      transition: all var(--transition-base);
+    }
+    .btn-trash:hover {
+      background: var(--danger-subtle);
+      color: var(--danger);
+    }
+
+    .btn-dashed-add {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px dashed var(--border-medium);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--primary);
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+    .btn-dashed-add:hover {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+    }
+
+    /* Enhanced Data Table in Builder */
+        .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      border: 1px solid var(--border-medium, #cbd5e1);
+      border-radius: var(--radius-md, 6px);
+      background: var(--bg-surface);
+      position: relative;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .app-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .app-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .app-table th {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 12px;
+      border-top: none;
+      border-bottom: 2px solid #cbd5e1 !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      white-space: nowrap;
+    }
+
+    [data-theme="dark"] .app-table th {
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-bottom: 2px solid #334155 !important;
+    }
+
+    .app-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-main);
+      vertical-align: middle;
+      background-color: var(--bg-surface);
+    }
+
+    .app-table tbody tr:hover td {
+      background-color: var(--bg-hover, #f8fafc);
+    }
+
+    /* Quy chuẩn 4 nhóm cột & Widths */
+    .col-cb { width: 40px; min-width: 40px; max-width: 40px; text-align: center !important; }
+    .col-stt { width: 50px; min-width: 50px; max-width: 60px; text-align: center !important; font-weight: 500; color: var(--text-muted); }
+    .col-action { width: 84px; min-width: 80px; max-width: 90px; text-align: center !important; }
+    .col-code { width: 140px; min-width: 120px; text-align: center !important; font-family: var(--font-mono); }
+    .col-money { min-width: 150px; text-align: right !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .col-number { min-width: 110px; text-align: right !important; font-variant-numeric: tabular-nums; }
+    .col-text { min-width: 220px; text-align: left !important; }
+    .cell-truncate { display: block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
+    /* Clean Enterprise Vector Action Buttons (NO EMOJIS) */
+    .action-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm, 4px);
+      color: var(--text-muted, #64748b);
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+    .action-icon-btn svg {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2;
+    }
+    .action-icon-btn:hover {
+      background: var(--primary-subtle, #eff6ff);
+      color: var(--primary, #1d4ed8);
+      border-color: var(--primary-border, #bfdbfe);
+    }
+    .action-icon-btn.btn-action-view:hover {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .action-icon-btn.btn-action-drill:hover {
+      background: #f5f3ff;
+      color: #7c3aed;
+      border-color: #ddd6fe;
+    }
+    .action-icon-btn.btn-action-export:hover {
+      background: #ecfdf5;
+      color: #059669;
+      border-color: #a7f3d0;
+    }
+.drag-handle {
+      cursor: grab;
+      color: var(--text-subtle);
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .agg-select {
+      height: 28px;
+      padding: 0 6px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      background: var(--bg-input);
+      border: 1px solid var(--border-light);
+    }
+
+    /* Filter & Parameters Panels */
+    .filter-panel-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .filter-panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rule-row {
+      display: grid;
+      grid-template-columns: 75px 1.2fr 0.8fr 1.2fr 28px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .param-rule-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr 85px 28px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Card Footer Bar */
+    .builder-footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border-light);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .validation-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .validation-status b {
+      color: var(--success);
+    }
+
+    /* ==========================================================================
+       RESULTS & SQL STUDIO PANELS + PAGINATION
+       ========================================================================== */
+    .results-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+      overflow: hidden;
+      margin-top: 18px;
+    }
+
+    .results-tab-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-light);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .results-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all var(--transition-base);
+    }
+    .results-tab-btn:hover {
+      color: var(--text-main);
+    }
+    .results-tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--primary);
+      border: 1px solid var(--border-light);
+    }
+
+    .results-grid-body {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      min-height: 260px;
+    }
+
+    .result-pane-column {
+      padding: 16px 18px;
+      border-right: 1px solid var(--border-light);
+    }
+    .result-pane-column:last-child {
+      border-right: none;
+    }
+
+    .pane-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .pane-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sql-code-block {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.6;
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    /* Server Pagination Bar */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border-light);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      background: var(--bg-surface);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .page-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ==========================================================================
+       VIEW 2: BI VISUAL CONFIGURATOR
+       ========================================================================== */
+    .bi-dashboard-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 260px;
+      gap: 16px;
+    }
+
+    .chart-type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .chart-card-choice {
+      height: 76px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+    .chart-card-choice svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+    .chart-card-choice:hover {
+      border-color: var(--border-medium);
+      color: var(--text-main);
+    }
+    .chart-card-choice.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-subtle);
+    }
+
+    .bi-preview-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-canvas-mock {
+      height: 280px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      padding: 10px 16px 24px;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .chart-canvas-mock::before {
+      content: "";
+      position: absolute;
+      inset: 10px 16px 24px;
+      background: repeating-linear-gradient(to bottom, transparent 0, transparent 48px, var(--border-light) 49px, var(--border-light) 50px);
+      pointer-events: none;
+    }
+
+    .chart-bar-item {
+      height: 100%;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 2;
+      gap: 6px;
+    }
+
+    .bar-pill-body {
+      width: 36px;
+      background: var(--primary);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s ease, background-color var(--transition-base);
+      position: relative;
+      cursor: pointer;
+    }
+    .bar-pill-body:hover {
+      filter: brightness(1.1);
+    }
+
+    .bar-data-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .bar-x-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       VIEW 3: CLEAN STANDALONE REPORT VIEWER
+       ========================================================================== */
+    .viewer-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .viewer-header-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .breadcrumb-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .viewer-title-area h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .viewer-title-area p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+        .viewer-filter-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-xs);
+      margin-bottom: 18px;
+    }
+
+    .viewer-filter-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    .filter-field-date {
+      width: 155px;
+      flex-shrink: 0;
+    }
+
+    .filter-field-select {
+      width: 260px;
+      flex-shrink: 0;
+    }
+
+    .filter-field-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    @media (max-width: 900px) {
+      .filter-field-date, .filter-field-select {
+        width: 100%;
+      }
+      .filter-field-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+      }
+    }.kpi-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .kpi-metric-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color var(--transition-base);
+    }
+    .kpi-metric-box:hover {
+      border-color: var(--border-medium);
+    }
+
+    .kpi-box-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-box-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .kpi-icon-pill {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      color: var(--text-muted);
+    }
+    .kpi-icon-pill svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2;
+    }
+
+    .kpi-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .kpi-main-number {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .kpi-unit-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-subtle);
+    }
+
+    .kpi-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .kpi-trend svg {
+      width: 12px;
+      height: 12px;
+      stroke-width: 2.5;
+    }
+    .kpi-trend.up {
+      color: var(--success);
+    }
+    .kpi-trend.down {
+      color: var(--danger);
+    }
+    .kpi-trend.neutral {
+      color: var(--text-muted);
+    }
+
+        .viewer-split-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .viewer-split-layout {
+        grid-template-columns: 1fr;
+      }
+    }.viewer-widget-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .widget-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Drill-down Clickable Rows */
+    .clickable-row {
+      cursor: pointer;
+    }
+    .clickable-row:hover td {
+      background: var(--primary-subtle) !important;
+    }
+
+    /* ==========================================================================
+       MODALS: ASYNC EXPORT & EMBED SDK GENERATOR
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      place-items: center;
+      z-index: 100;
+    }
+    .modal-backdrop.active {
+      display: grid;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 520px;
+      max-width: 95vw;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin: 8px 0;
+      border: 1px solid var(--border-light);
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast-msg {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      animation: slideUp 0.2s ease-out;
+    }
+
+    .toast-msg svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      color: #34d399;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .bi-dashboard-grid { grid-template-columns: 1fr; }
+      .viewer-split-layout { grid-template-columns: 1fr; }
+      .results-grid-body { grid-template-columns: 1fr; }
+      .result-pane-column { border-right: none; border-bottom: 1px solid var(--border-light); }
+      .kpi-cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .app-container { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .viewer-filter-grid { grid-template-columns: 1fr; }
+      .kpi-cards-grid { grid-template-columns: 1fr; }
+      .brand-title { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       HEADER & NAVIGATION
+       ========================================================================== -->
+  <header class="topbar">
+    <div class="brand-section">
+      <div class="brand-logo">MR</div>
+      <div class="brand-info">
+        <div class="brand-title-row">
+          <span class="brand-title">Micro-Report Studio</span>
+          <span class="badge-tenant">TENANT: DIP_BHXH</span>
+        </div>
+        <div class="brand-meta">
+          <span class="status-dot"></span>
+          <span id="activeDsLabel">Oracle XE (DIP Core OLTP) &bull; Read-Only</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch">
+      <button class="mode-btn active" data-view="builder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <span>Report Builder Studio</span>
+      </button>
+      <button class="mode-btn" data-view="bi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span>Cấu Hình Trực Quan BI</span>
+      </button>
+      <button class="mode-btn" data-view="viewer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+        <span>Màn Hình End-User</span>
+      </button>
+    </div>
+
+    <!-- Top Action Buttons -->
+    <div class="top-actions">
+      <button class="btn-icon" id="themeToggle" title="Chuyển đổi giao diện Sáng / Tối">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <button class="btn btn-secondary" onclick="openEmbedModal()" title="Mã nhúng SDK & Iframe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>Embed SDK</span>
+      </button>
+      <button class="btn btn-secondary" onclick="notify('Đã lưu phiên bản mẫu báo cáo v2.4')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span>Lưu Mẫu</span>
+      </button>
+      <button class="btn btn-primary" onclick="openExportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Xuất Dữ Liệu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN APPLICATION LAYOUT
+       ========================================================================== -->
+  <div class="app-container">
+
+    <!-- LEFT SIDEBAR: MULTI-DATASOURCE & SCHEMA TREE -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title-row">
+          <span class="sidebar-title">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            Nguồn Dữ Liệu
+          </span>
+          <span class="col-type-badge" id="tableCountBadge">4 BẢNG</span>
+        </div>
+        
+        <!-- Multi-DataSource Dropdown -->
+        <div class="ds-selector-wrap">
+          <select class="ds-select" id="dataSourceSelect" onchange="changeDataSource(this.value)">
+            <option value="oracle">Oracle XE — DIP Core OLTP</option>
+            <option value="postgres">PostgreSQL — Analytics DWH</option>
+            <option value="clickhouse">ClickHouse — Payment Audit Logs</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sidebar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="schemaSearch" placeholder="Tìm kiếm bảng, cột...">
+      </div>
+
+      <!-- Dynamic Schema Tree Container -->
+      <div class="tree-scroll-area" id="schemaTreeArea">
+        <!-- Tables will be dynamically rendered or toggled -->
+        <div class="tree-table-group expanded">
+          <div class="tree-table-header" onclick="toggleTableGroup(this)">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span class="table-name">CFG_BHXH_UNITS</span>
+            <span class="table-tag">Gốc (u)</span>
+          </div>
+          <div class="tree-columns-list">
+            <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'u.CODE', 'VARCHAR2')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>CODE</span></span>
+              <span class="col-type-badge">VARCHAR2</span>
+            </div>
+            <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'u.NAME', 'VARCHAR2')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>NAME</span></span>
+              <span class="col-type-badge">VARCHAR2</span>
+            </div>
+            <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'u.PROVINCE_CODE', 'VARCHAR2')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>PROVINCE_CODE</span></span>
+              <span class="col-type-badge">VARCHAR2</span>
+            </div>
+            <div class="tree-col-item" onclick="toggleColumnSelect(this, 'u.STATUS', 'NUMBER')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>STATUS</span></span>
+              <span class="col-type-badge">NUMBER</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tree-table-group expanded">
+          <div class="tree-table-header" onclick="toggleTableGroup(this)">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span class="table-name">CFG_COMMISSION_RATES</span>
+            <span class="table-tag">cr</span>
+          </div>
+          <div class="tree-columns-list">
+            <div class="tree-col-item" onclick="toggleColumnSelect(this, 'cr.UNIT_CODE', 'VARCHAR2')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>UNIT_CODE</span></span>
+              <span class="col-type-badge">VARCHAR2</span>
+            </div>
+            <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'cr.COMMISSION_AMOUNT', 'NUMBER')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>COMMISSION_AMOUNT</span></span>
+              <span class="col-type-badge">NUMBER</span>
+            </div>
+            <div class="tree-col-item" onclick="toggleColumnSelect(this, 'cr.TRANS_DATE', 'DATE')">
+              <span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>TRANS_DATE</span></span>
+              <span class="col-type-badge">DATE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tree-table-group">
+          <div class="tree-table-header" onclick="toggleTableGroup(this)">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span class="table-name">CFG_PAYMENTS</span>
+            <span class="table-tag">p</span>
+          </div>
+          <div class="tree-columns-list">
+            <div class="tree-col-item" onclick="toggleColumnSelect(this, 'p.AMOUNT', 'NUMBER')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>AMOUNT</span></span><span class="col-type-badge">NUMBER</span></div>
+          </div>
+        </div>
+
+        <div class="tree-table-group">
+          <div class="tree-table-header" onclick="toggleTableGroup(this)">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span class="table-name">DIM_DATE</span>
+            <span class="table-tag">d</span>
+          </div>
+          <div class="tree-columns-list">
+            <div class="tree-col-item" onclick="toggleColumnSelect(this, 'd.FULL_DATE', 'DATE')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>FULL_DATE</span></span><span class="col-type-badge">DATE</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="workspace">
+
+      <!-- ==========================================================================
+           VIEW 1: DUAL-MODE REPORT BUILDER STUDIO (NO-CODE GUI & MONACO SQL)
+           ========================================================================== -->
+      <section class="view-panel active" id="builder">
+        
+        <div class="page-header-row">
+          <div class="page-title-group">
+            <h1>Report Builder Studio</h1>
+            <p>Trình thiết kế báo cáo động chuẩn Hybrid (No-Code kéo thả & Low-Code Monaco SQL Editor).</p>
+          </div>
+          
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="security-badge-pill" title="AST Validator chặn 100% lệnh DML/DDL">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>AST Sandbox: SELECT Safe</span>
+            </span>
+            <span class="status-chip">
+              <span class="status-dot" style="background:#d97706"></span>
+              <span>DRAFT &bull; v2.4</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <!-- Dual-Mode Switcher Bar -->
+          <div class="dual-mode-header-tab">
+            <div class="builder-mode-pills">
+              <button class="b-mode-btn active" id="btnGuiMode" onclick="switchBuilderMode('gui')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <span>No-Code GUI Builder</span>
+              </button>
+              <button class="b-mode-btn" id="btnSqlMode" onclick="switchBuilderMode('sql')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>Low-Code Monaco SQL</span>
+              </button>
+            </div>
+            
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="syncGuiToSql()">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Đồng Bộ GUI ➔ SQL</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE 1: NO-CODE GUI BUILDER BODY -->
+          <div id="guiBuilderContainer">
+            <!-- STEP 1: METADATA -->
+            <div class="section-block">
+              <div class="section-header">
+                <div class="section-title">
+                  <span class="step-number">1</span>
+                  <span>Thông Tin Mẫu Báo Cáo (Metadata)</span>
+                </div>
+                <span class="section-hint">Khai báo mã định danh, tiêu đề và phân loại báo cáo</span>
+              </div>
+              <div class="grid-4">
+                <div class="form-group">
+                  <label class="form-label">Tiêu đề báo cáo <span class="required">*</span></label>
+                  <input class="form-input" id="reportTitle" value="Báo Cáo Doanh Thu BHXH Theo Tỉnh" oninput="updateReportTitle(this.value)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mã báo cáo <span class="required">*</span></label>
+                  <input class="form-input" value="BC_DOANH_THU_BHXH_TINH" style="font-family:var(--font-mono)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phân loại danh mục</label>
+                  <select class="form-select">
+                    <option>Báo Cáo Tài Chính & Doanh Thu</option>
+                    <option>Báo Cáo Đối Soát Giao Dịch</option>
+                    <option>Báo Cáo Đơn Vị & Đại Lý</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Hiển thị mặc định</label>
+                  <select class="form-select">
+                    <option value="both">Hỗn hợp (Biểu đồ + Bảng)</option>
+                    <option value="chart">Biểu đồ trực quan BI</option>
+                    <option value="table">Bảng dữ liệu chi tiết</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2: JOINS -->
+            <div class="section-block">
+              <div class="section-header">
+                <div class="section-title">
+                  <span class="step-number">2</span>
+                  <span>Bảng Dữ Liệu Gốc & Liên Kết (JOIN)</span>
+                </div>
+                <span class="section-hint">Tự động cấu hình khóa quan hệ giữa các bảng</span>
+              </div>
+              
+              <div class="grid-2" style="margin-bottom:12px">
+                <div class="form-group">
+                  <label class="form-label">Bảng dữ liệu chính (Root Table)</label>
+                  <select class="form-select" style="font-weight:600">
+                    <option>CFG_BHXH_UNITS (u) — Bảng Đơn Vị BHXH</option>
+                    <option>CFG_PAYMENTS (p) — Bảng Giao Dịch Thu</option>
+                  </select>
+                </div>
+                <div style="display:flex;align-items:flex-end">
+                  <button class="btn-dashed-add" style="width:100%" onclick="addJoinRow()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Thêm Bảng Liên Kết (JOIN)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="join-container" id="joinsContainer">
+                <div class="join-row-card">
+                  <div>
+                    <select class="form-select" onchange="generateSQL()">
+                      <option value="LEFT JOIN">LEFT JOIN</option>
+                      <option value="INNER JOIN">INNER JOIN</option>
+                      <option value="RIGHT JOIN">RIGHT JOIN</option>
+                    </select>
+                  </div>
+                  <div>
+                    <select class="form-select" onchange="generateSQL()">
+                      <option value="CFG_COMMISSION_RATES cr">CFG_COMMISSION_RATES (cr)</option>
+                      <option value="CFG_PAYMENTS p">CFG_PAYMENTS (p)</option>
+                      <option value="DIM_DATE d">DIM_DATE (d)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <select class="form-select" onchange="generateSQL()">
+                      <option value="u.CODE">ON u.CODE =</option>
+                      <option value="u.PROVINCE_CODE">ON u.PROVINCE_CODE =</option>
+                    </select>
+                  </div>
+                  <div>
+                    <select class="form-select" onchange="generateSQL()">
+                      <option value="cr.UNIT_CODE">cr.UNIT_CODE</option>
+                      <option value="cr.PROVINCE_ID">cr.PROVINCE_ID</option>
+                    </select>
+                  </div>
+                  <button class="btn-trash" onclick="this.closest('.join-row-card').remove(); generateSQL();" title="Xóa liên kết">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: SELECTED COLUMNS & FORMULAS -->
+            <div class="section-block">
+              <div class="section-header">
+                <div class="section-title">
+                  <span class="step-number">3</span>
+                  <span>Cột Hiển Thị, Hàm Tổng Hợp & Cột Tính Toán (<span id="columnCount">3</span> Cột)</span>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-sm" onclick="addCalculatedFieldModal()">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>+ Cột Tính Toán (Formula)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="app-table" id="columnsTable">
+                  <thead>
+                    <tr>
+                      <th style="width:40px">STT</th>
+                      <th>Biểu Thức / Cột CSDL</th>
+                      <th>Tên Hiển Thị (Bí Danh)</th>
+                      <th>Hàm Tổng Hợp</th>
+                      <th>Định Dạng</th>
+                      <th style="width:50px;text-align:center">Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="columnsTableBody">
+                    <tr data-col="u.NAME">
+                      <td><span class="drag-handle">:: 1</span></td>
+                      <td><span style="font-family:var(--font-mono);font-weight:600;color:var(--primary)">u.NAME</span></td>
+                      <td><input class="form-input" style="height:28px;font-size:11.5px;font-weight:600" value="TÊN TỈNH/THÀNH" oninput="generateSQL()"></td>
+                      <td>
+                        <select class="agg-select" onchange="generateSQL()">
+                          <option value="NONE">None (GROUP BY)</option>
+                          <option value="COUNT">COUNT</option>
+                        </select>
+                      </td>
+                      <td><span class="col-type-badge">VARCHAR2</span></td>
+                      <td style="text-align:center">
+                        <button class="btn-trash" onclick="removeColRow(this)" title="Xóa">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr data-col="cr.COMMISSION_AMOUNT">
+                      <td><span class="drag-handle">:: 2</span></td>
+                      <td><span style="font-family:var(--font-mono);font-weight:600;color:var(--primary)">cr.COMMISSION_AMOUNT</span></td>
+                      <td><input class="form-input" style="height:28px;font-size:11.5px;font-weight:600" value="TỔNG HOA HỒNG" oninput="generateSQL()"></td>
+                      <td>
+                        <select class="agg-select" style="color:var(--success);font-weight:600" onchange="generateSQL()">
+                          <option value="SUM" selected>SUM</option>
+                          <option value="AVG">AVG</option>
+                          <option value="COUNT">COUNT</option>
+                        </select>
+                      </td>
+                      <td><span class="col-type-badge">NUMBER</span></td>
+                      <td style="text-align:center">
+                        <button class="btn-trash" onclick="removeColRow(this)" title="Xóa">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr data-col="u.CODE">
+                      <td><span class="drag-handle">:: 3</span></td>
+                      <td><span style="font-family:var(--font-mono);font-weight:600;color:var(--primary)">u.CODE</span></td>
+                      <td><input class="form-input" style="height:28px;font-size:11.5px;font-weight:600" value="SỐ ĐƠN VỊ" oninput="generateSQL()"></td>
+                      <td>
+                        <select class="agg-select" onchange="generateSQL()">
+                          <option value="COUNT" selected>COUNT</option>
+                          <option value="COUNT_DISTINCT">COUNT DISTINCT</option>
+                          <option value="NONE">None</option>
+                        </select>
+                      </td>
+                      <td><span class="col-type-badge">NUMBER</span></td>
+                      <td style="text-align:center">
+                        <button class="btn-trash" onclick="removeColRow(this)" title="Xóa">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- STEP 4: FILTERS & PARAMETERS -->
+            <div class="section-block">
+              <div class="section-header">
+                <div class="section-title">
+                  <span class="step-number">4</span>
+                  <span>Bộ Lọc Điều Kiện (WHERE & Dynamic Parameters)</span>
+                </div>
+                <span class="section-hint">Cấu hình điều kiện lọc tĩnh và tham số động bind tự động</span>
+              </div>
+
+              <div class="grid-2">
+                <!-- Fixed WHERE -->
+                <div class="filter-panel-card">
+                  <div class="filter-panel-header">
+                    <span class="filter-panel-title">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                      Điều Kiện WHERE Cố Định
+                    </span>
+                  </div>
+                  
+                  <div id="fixedRulesWrap" style="display:flex;flex-direction:column;gap:6px">
+                    <div class="rule-row">
+                      <span style="font-size:11px;font-weight:700;color:var(--text-muted)">WHERE</span>
+                      <select class="form-select" onchange="generateSQL()"><option value="u.STATUS">u.STATUS</option><option value="u.PROVINCE_CODE">u.PROVINCE_CODE</option></select>
+                      <select class="form-select" onchange="generateSQL()"><option value="=">=</option><option value="!=">!=</option><option value="IN">IN</option></select>
+                      <input class="form-input" value="1" oninput="generateSQL()">
+                      <button class="btn-trash" onclick="this.closest('.rule-row').remove(); generateSQL();">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class="btn-dashed-add" onclick="addFixedRule()">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Thêm Điều Kiện WHERE</span>
+                  </button>
+                </div>
+
+                <!-- Dynamic Parameters -->
+                <div class="filter-panel-card">
+                  <div class="filter-panel-header">
+                    <span class="filter-panel-title">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                      Tham Số Động (Bind: &#123;&#123;params.x&#125;&#125;)
+                    </span>
+                  </div>
+
+                  <div id="dynamicParamsWrap" style="display:flex;flex-direction:column;gap:6px">
+                    <div class="param-rule-row">
+                      <input class="form-input" value="fromDate" style="font-family:var(--font-mono);font-size:11px">
+                      <select class="form-select"><option>Date Picker</option><option>Dropdown</option></select>
+                      <input class="form-input" value="01/08/2026">
+                      <label class="checkbox-label"><input type="checkbox" checked> Bắt buộc</label>
+                      <button class="btn-trash" onclick="this.closest('.param-rule-row').remove();">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div class="param-rule-row">
+                      <input class="form-input" value="toDate" style="font-family:var(--font-mono);font-size:11px">
+                      <select class="form-select"><option>Date Picker</option><option>Dropdown</option></select>
+                      <input class="form-input" value="31/08/2026">
+                      <label class="checkbox-label"><input type="checkbox" checked> Bắt buộc</label>
+                      <button class="btn-trash" onclick="this.closest('.param-rule-row').remove();">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div class="param-rule-row">
+                      <input class="form-input" value="provinceCode" style="font-family:var(--font-mono);font-size:11px">
+                      <select class="form-select"><option selected>Dropdown</option><option>Text</option></select>
+                      <input class="form-input" placeholder="-- Tất cả tỉnh --">
+                      <label class="checkbox-label"><input type="checkbox"> Tùy chọn</label>
+                      <button class="btn-trash" onclick="this.closest('.param-rule-row').remove();">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class="btn-dashed-add" onclick="addDynamicParam()">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Thêm Tham Số</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE 2: LOW-CODE MONACO SQL STUDIO BODY -->
+          <div id="sqlStudioContainer" style="display:none;padding:16px 20px">
+            <div class="sql-studio-container">
+              <div class="sql-helper-toolbar">
+                <span style="font-size:11.5px;font-weight:700;color:var(--text-muted)">Gợi ý cú pháp nhanh:</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="sql-chip-btn" onclick="insertSqlSnippet('WITH cte AS (...)')">+ CTE (WITH)</button>
+                  <button class="sql-chip-btn" onclick="insertSqlSnippet('CASE WHEN ... THEN ... ELSE ... END')">+ CASE WHEN</button>
+                  <button class="sql-chip-btn" onclick="insertSqlSnippet('OVER (PARTITION BY ... ORDER BY ...)')">+ Window Function</button>
+                  <button class="sql-chip-btn" onclick="insertSqlSnippet('{{params.fromDate}}')">+ Bind {{params}}</button>
+                </div>
+              </div>
+              <textarea class="monaco-mock-editor" id="monacoSqlInput" rows="12" spellcheck="false">-- Micro-Report Engine v4.0 (Monaco SQL Studio)
+-- Hỗ trợ CTE, Window Functions và Dynamic Parameters {{params.var}}
+
+WITH monthly_revenue AS (
+  SELECT 
+    u.PROVINCE_CODE,
+    u.NAME AS province_name,
+    SUM(cr.COMMISSION_AMOUNT) AS total_commission,
+    COUNT(u.CODE) AS total_units
+  FROM CFG_BHXH_UNITS u
+  LEFT JOIN CFG_COMMISSION_RATES cr 
+    ON u.CODE = cr.UNIT_CODE
+  WHERE u.STATUS = 1
+    AND ({{params.provinceCode}} IS NULL OR u.PROVINCE_CODE = {{params.provinceCode}})
+    AND cr.TRANS_DATE BETWEEN TO_DATE({{params.fromDate}}, 'DD/MM/YYYY') 
+                          AND TO_DATE({{params.toDate}}, 'DD/MM/YYYY')
+  GROUP BY u.PROVINCE_CODE, u.NAME
+)
+SELECT 
+  province_name AS "TÊN TỈNH/THÀNH",
+  total_commission AS "TỔNG HOA HỒNG",
+  total_units AS "SỐ ĐƠN VỊ",
+  ROUND(total_commission / NULLIF(total_units, 0), 2) AS "HOA HỒNG TB/ĐƠN VỊ"
+FROM monthly_revenue
+ORDER BY total_commission DESC;</textarea>
+            </div>
+          </div>
+
+          <!-- FOOTER ACTION BAR -->
+          <div class="builder-footer-bar">
+            <div class="validation-status">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--success)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              <span><b>Cú pháp hợp lệ (AST Validator Passed)</b> &bull; Dialect: <b>Oracle CBO / HikariPool</b></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn btn-secondary" onclick="formatSQL()">Format SQL</button>
+              <button class="btn btn-success" onclick="runQueryPreview()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Chạy Thử Truy Vấn (Ctrl+Enter)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULTS & QUERY EXECUTION STUDIO -->
+        <div class="results-card">
+          <div class="results-tab-bar">
+            <div class="tab-group">
+              <button class="results-tab-btn active" onclick="switchResultTab(this, 'tabData')">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <span>Bảng Kết Quả (5 Dòng)</span>
+              </button>
+              <button class="results-tab-btn" onclick="switchResultTab(this, 'tabSql')">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>SQL Engine Script</span>
+              </button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-muted)">
+              <span>Thời gian: <b style="color:var(--success)">11 ms</b></span>
+              <span>&bull;</span>
+              <span>Memory: <b>1.2 MB</b></span>
+              <button class="btn btn-secondary btn-sm" onclick="copySQLText()">Sao Chép SQL</button>
+            </div>
+          </div>
+
+          <div class="results-grid-body">
+            <div class="result-pane-column">
+              <div class="pane-title-row">
+                <span class="pane-title">Dữ Liệu Trả Về (Server-side Preview)</span>
+                <span style="font-size:11px;color:var(--text-muted)">Hiển thị 5/507 dòng</span>
+              </div>
+              <div class="table-responsive" style="max-height:280px;overflow-y:auto">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th class="col-cb"><input type="checkbox" title="Chọn tất cả" onchange="toggleSelectAll(this)" style="cursor:pointer"></th>
+                      <th class="col-stt">STT</th>
+                      <th class="col-action">Thao tác</th>
+                      <th class="col-text">Tên Tỉnh / Thành Phố</th>
+                      <th class="col-money">Tổng Hoa Hồng (VNĐ)</th>
+                      <th class="col-number">Số Đơn Vị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">1</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh (Quick Sample)" onclick="notify('Xem mẫu nhanh: BHXH TP Hà Nội')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Hà Nội', '12.450.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Thành phố Hà Nội">BHXH Thành phố Hà Nội</span></td>
+                      <td class="col-money">12.450.000.000 ₫</td>
+                      <td class="col-number">128</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">2</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh (Quick Sample)" onclick="notify('Xem mẫu nhanh: BHXH TP Hồ Chí Minh')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Hồ Chí Minh', '18.320.500.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Thành phố Hồ Chí Minh">BHXH Thành phố Hồ Chí Minh</span></td>
+                      <td class="col-money">18.320.500.000 ₫</td>
+                      <td class="col-number">156</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">3</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh (Quick Sample)" onclick="notify('Xem mẫu nhanh: BHXH TP Đà Nẵng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Đà Nẵng', '6.850.200.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Thành phố Đà Nẵng">BHXH Thành phố Đà Nẵng</span></td>
+                      <td class="col-money">6.850.200.000 ₫</td>
+                      <td class="col-number">89</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">4</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh (Quick Sample)" onclick="notify('Xem mẫu nhanh: BHXH TP Hải Phòng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Hải Phòng', '7.210.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Thành phố Hải Phòng">BHXH Thành phố Hải Phòng</span></td>
+                      <td class="col-money">7.210.000.000 ₫</td>
+                      <td class="col-number">76</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">5</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh (Quick Sample)" onclick="notify('Xem mẫu nhanh: BHXH TP Cần Thơ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Cần Thơ', '4.330.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Thành phố Cần Thơ">BHXH Thành phố Cần Thơ</span></td>
+                      <td class="col-money">4.330.000.000 ₫</td>
+                      <td class="col-number">58</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">6</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh" onclick="notify('Xem mẫu nhanh: BHXH Tỉnh Nghệ An')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Nghệ An', '3.920.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Tỉnh Nghệ An">BHXH Tỉnh Nghệ An</span></td>
+                      <td class="col-money">3.920.000.000 ₫</td>
+                      <td class="col-number">45</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">7</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh" onclick="notify('Xem mẫu nhanh: BHXH Tỉnh Đồng Nai')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Đồng Nai', '5.180.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Tỉnh Đồng Nai">BHXH Tỉnh Đồng Nai</span></td>
+                      <td class="col-money">5.180.000.000 ₫</td>
+                      <td class="col-number">62</td>
+                    </tr>
+                    <tr>
+                      <td class="col-cb"><input type="checkbox" class="preview-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">8</td>
+                      <td class="col-action">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem mẫu dữ liệu nhanh" onclick="notify('Xem mẫu nhanh: BHXH Tỉnh Bình Dương')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down phân tích chi tiết" onclick="triggerDrillDown('Bình Dương', '6.450.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Tỉnh Bình Dương">BHXH Tỉnh Bình Dương</span></td>
+                      <td class="col-money">6.450.000.000 ₫</td>
+                      <td class="col-number">71</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination Controls -->
+              <div class="pagination-bar">
+                <span>Hiển thị 1 - 5 trong tổng số 507 dòng</span>
+                <div class="pagination-controls">
+                  <button class="page-btn">&laquo;</button>
+                  <button class="page-btn active">1</button>
+                  <button class="page-btn">2</button>
+                  <button class="page-btn">3</button>
+                  <button class="page-btn">&raquo;</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-pane-column">
+              <div class="pane-title-row">
+                <span class="pane-title">SQL Query Sinh Tự Động (Dialect: Oracle)</span>
+                <span class="col-type-badge">ORACLE AST</span>
+              </div>
+              <pre class="sql-code-block" id="sqlOutput">SELECT u.NAME AS "TÊN TỈNH/THÀNH",
+       SUM(cr.COMMISSION_AMOUNT) AS "TỔNG HOA HỒNG",
+       COUNT(u.CODE) AS "SỐ ĐƠN VỊ"
+FROM CFG_BHXH_UNITS u
+LEFT JOIN CFG_COMMISSION_RATES cr
+  ON u.CODE = cr.UNIT_CODE
+WHERE u.STATUS = 1
+  AND (:provinceCode IS NULL OR u.PROVINCE_CODE = :provinceCode)
+  AND cr.TRANS_DATE BETWEEN TO_DATE(:fromDate, 'DD/MM/YYYY') 
+                        AND TO_DATE(:toDate, 'DD/MM/YYYY')
+GROUP BY u.NAME
+ORDER BY 2 DESC;</pre>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==========================================================================
+           VIEW 2: BI VISUAL CONFIGURATOR & DASHBOARD
+           ========================================================================== -->
+      <section class="view-panel" id="bi">
+        <div class="page-header-row">
+          <div class="page-title-group">
+            <h1>Cấu Hình Trực Quan Hóa (BI Dashboard Studio)</h1>
+            <p>Tùy biến hiển thị biểu đồ phân tích và bảng số liệu trực quan cho người dùng cuối.</p>
+          </div>
+          <button class="btn btn-primary" onclick="notify('Đã lưu cấu hình BI')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Lưu Cấu Hình BI</span>
+          </button>
+        </div>
+
+        <div class="bi-dashboard-grid">
+          <!-- Left BI Config -->
+          <div class="builder-card" style="padding:16px">
+            <div class="form-label" style="margin-bottom:10px">1. Chọn Loại Biểu Đồ</div>
+            <div class="chart-type-grid">
+              <div class="chart-card-choice active" onclick="selectBIChart(this, 'bar')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <span>Cột (Bar)</span>
+              </div>
+              <div class="chart-card-choice" onclick="selectBIChart(this, 'line')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <span>Đường (Line)</span>
+              </div>
+              <div class="chart-card-choice" onclick="selectBIChart(this, 'donut')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10h-10z"/></svg>
+                <span>Tròn (Donut)</span>
+              </div>
+              <div class="chart-card-choice" onclick="selectBIChart(this, 'kpi')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h10M7 8h6M7 16h8"/></svg>
+                <span>Thẻ KPI</span>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+              <div class="form-group">
+                <label class="form-label">Trục X (Dimension)</label>
+                <select class="form-select">
+                  <option>u.NAME (Tên Tỉnh/Thành)</option>
+                  <option>cr.TRANS_DATE (Ngày Giao Dịch)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Trục Y (Metric)</label>
+                <select class="form-select">
+                  <option>SUM(cr.COMMISSION_AMOUNT) - Doanh Thu</option>
+                  <option>COUNT(u.CODE) - Số Lượng</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bảng Màu Chủ Đạo</label>
+                <select class="form-select" onchange="changeColorPalette(this.value)">
+                  <option value="corporate">Corporate Blue (Tiêu chuẩn)</option>
+                  <option value="emerald">Emerald Growth</option>
+                  <option value="sunset">Sunset Amber</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center Live BI Preview -->
+          <div class="bi-preview-card">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <h3 style="font-size:14px;font-weight:700">Xem Trước Biểu Đồ</h3>
+                <p style="font-size:11.5px;color:var(--text-muted)">Doanh thu hoa hồng phân bổ theo tỉnh/thành</p>
+              </div>
+              <span class="col-type-badge">LIVE PREVIEW</span>
+            </div>
+
+            <div class="chart-canvas-mock" id="chartCanvasMock">
+              <div class="chart-bar-item">
+                <div class="bar-data-label">12.45B</div>
+                <div class="bar-pill-body" style="height:55%" onclick="triggerDrillDown('Hà Nội', '12.450.000.000')"></div>
+                <div class="bar-x-label">Hà Nội</div>
+              </div>
+              <div class="chart-bar-item">
+                <div class="bar-data-label">18.32B</div>
+                <div class="bar-pill-body" style="height:84%" onclick="triggerDrillDown('Hồ Chí Minh', '18.320.500.000')"></div>
+                <div class="bar-x-label">TP.HCM</div>
+              </div>
+              <div class="chart-bar-item">
+                <div class="bar-data-label">6.85B</div>
+                <div class="bar-pill-body" style="height:32%" onclick="triggerDrillDown('Đà Nẵng', '6.850.200.000')"></div>
+                <div class="bar-x-label">Đà Nẵng</div>
+              </div>
+              <div class="chart-bar-item">
+                <div class="bar-data-label">7.21B</div>
+                <div class="bar-pill-body" style="height:38%" onclick="triggerDrillDown('Hải Phòng', '7.210.000.000')"></div>
+                <div class="bar-x-label">Hải Phòng</div>
+              </div>
+              <div class="chart-bar-item">
+                <div class="bar-data-label">4.33B</div>
+                <div class="bar-pill-body" style="height:22%" onclick="triggerDrillDown('Cần Thơ', '4.330.000.000')"></div>
+                <div class="bar-x-label">Cần Thơ</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-muted)">
+              <span>Đơn vị: <b>Tỷ VNĐ</b> (Click vào cột để Drill-down chi tiết)</span>
+              <span>Tổng 5 tỉnh</span>
+            </div>
+          </div>
+
+          <!-- Right Display Settings -->
+          <div class="builder-card" style="padding:16px">
+            <div class="form-label" style="margin-bottom:12px">2. Tùy Chọn Hiển Thị</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <label class="checkbox-label"><input type="checkbox" checked> Hiển thị nhãn giá trị</label>
+              <label class="checkbox-label"><input type="checkbox" checked> Hiển thị đường lưới</label>
+              <label class="checkbox-label"><input type="checkbox" checked> Cho phép Drill-down chi tiết</label>
+              
+              <div class="form-group" style="margin-top:6px">
+                <label class="form-label">Định dạng số</label>
+                <select class="form-select">
+                  <option>Dạng rút gọn (1.2B / 500M)</option>
+                  <option>Đầy đủ phân cách (1.200.000.000)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           VIEW 3: CLEAN STANDALONE REPORT VIEWER
+           ========================================================================== -->
+      <section class="view-panel" id="viewer">
+        <div class="viewer-container">
+          
+          <!-- Viewer Top Meta Header -->
+          <div class="page-header-row" style="margin-bottom:18px">
+            <div class="viewer-title-area">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="badge-tenant">BÁO CÁO DOANH THU</span>
+                <span class="status-chip" style="background:var(--success-subtle);color:var(--success);border-color:var(--success-border)">
+                  <span class="status-dot"></span> LIVE DATA
+                </span>
+              </div>
+              <h2 id="viewerReportTitle" style="font-size:20px;font-weight:800;color:var(--text-main);margin-top:6px;letter-spacing:-0.4px">Báo Cáo Doanh Thu Hoa Hồng BHXH Theo Tỉnh</h2>
+              <p style="font-size:12px;color:var(--text-muted);margin-top:2px">Kỳ đối soát tháng 08/2026 &bull; Nguồn: Oracle XE Core DWH &bull; Tự động đồng bộ mỗi 15 phút</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn btn-secondary btn-sm" onclick="notify('Đã làm mới dữ liệu báo cáo')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                <span>Làm Mới</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openEmbedModal()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>Nhúng Iframe</span>
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openExportModal()">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Xuất Báo Cáo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Compact Professional Filter Bar (No Stretched Dates) -->
+          <div class="viewer-filter-card">
+            <div class="viewer-filter-grid">
+              <div class="form-group filter-field-date">
+                <label class="form-label" style="font-size:11px;font-weight:600;color:var(--text-muted)">Từ ngày <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-input" value="01/08/2026" id="viewerFromDate" style="height:32px;font-size:12px">
+              </div>
+
+              <div class="form-group filter-field-date">
+                <label class="form-label" style="font-size:11px;font-weight:600;color:var(--text-muted)">Đến ngày <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-input" value="31/08/2026" id="viewerToDate" style="height:32px;font-size:12px">
+              </div>
+
+              <div class="form-group filter-field-select">
+                <label class="form-label" style="font-size:11px;font-weight:600;color:var(--text-muted)">Tỉnh / Thành phố</label>
+                <select class="form-select" id="viewerProvinceFilter" style="height:32px;font-size:12px">
+                  <option value="ALL">-- Tất cả 63 Tỉnh/Thành --</option>
+                  <option value="01">Thành phố Hà Nội</option>
+                  <option value="79">Thành phố Hồ Chí Minh</option>
+                  <option value="48">Thành phố Đà Nẵng</option>
+                  <option value="31">Thành phố Hải Phòng</option>
+                  <option value="92">Thành phố Cần Thơ</option>
+                </select>
+              </div>
+
+              <div class="filter-field-actions">
+                <button class="btn btn-secondary" style="height:32px" onclick="notify('Đã đặt lại bộ lọc mặc định')">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  <span>Đặt Lại</span>
+                </button>
+                <button class="btn btn-primary" style="height:32px;background:var(--primary)" onclick="applyViewerFilters()">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span>Áp Dụng Bộ Lọc</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Metric Cards -->
+          <div class="kpi-cards-grid">
+            <div class="kpi-metric-box">
+              <div class="kpi-box-top">
+                <span class="kpi-box-label">Tổng Hoa Hồng Thực Nhận</span>
+                <div class="kpi-icon-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-main-number">49.160.700.000</span>
+                <span class="kpi-unit-tag">VNĐ</span>
+              </div>
+              <div class="kpi-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span>+18.4% so với tháng trước</span>
+              </div>
+            </div>
+
+            <div class="kpi-metric-box">
+              <div class="kpi-box-top">
+                <span class="kpi-box-label">Số Đơn Vị Đối Soát</span>
+                <div class="kpi-icon-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                </div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-main-number">507</span>
+                <span class="kpi-unit-tag">Đơn vị</span>
+              </div>
+              <div class="kpi-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span>+24 đơn vị mới</span>
+              </div>
+            </div>
+
+            <div class="kpi-metric-box">
+              <div class="kpi-box-top">
+                <span class="kpi-box-label">Tỉnh / Thành Đã Phát Sinh</span>
+                <div class="kpi-icon-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-main-number">5</span>
+                <span class="kpi-unit-tag">Tỉnh/TP</span>
+              </div>
+              <div class="kpi-trend neutral">
+                <span>Độ phủ 100% mục tiêu</span>
+              </div>
+            </div>
+
+            <div class="kpi-metric-box">
+              <div class="kpi-box-top">
+                <span class="kpi-box-label">Doanh Thu TB / Đơn Vị</span>
+                <div class="kpi-icon-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-main-number">96.857.786</span>
+                <span class="kpi-unit-tag">VNĐ</span>
+              </div>
+              <div class="kpi-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span>+5.2% hiệu suất</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Split Layout: Left Chart (50%) & Right Data Table (50%) -->
+          <div class="viewer-split-layout">
+            <!-- Left: Visual Bar Chart -->
+            <div class="viewer-widget-card">
+              <div class="widget-header">
+                <div>
+                  <span class="widget-title">Biểu Đồ Doanh Thu Phân Bổ Theo Tỉnh</span>
+                  <p style="font-size:11px;color:var(--text-muted);margin-top:2px">Click vào cột để Drill-Down chi tiết</p>
+                </div>
+                <span class="col-type-badge" style="background:var(--primary-subtle);color:var(--primary);font-weight:700">LIVE CHART</span>
+              </div>
+
+              <div class="chart-canvas-mock" style="height:230px;margin-bottom:12px">
+                <div class="chart-bar-item">
+                  <div class="bar-data-label">12.45B</div>
+                  <div class="bar-pill-body" style="height:55%" onclick="triggerDrillDown('Hà Nội', '12.450.000.000 ₫')" title="Hà Nội: 12.450.000.000 ₫"></div>
+                  <div class="bar-x-label">Hà Nội</div>
+                </div>
+                <div class="chart-bar-item">
+                  <div class="bar-data-label">18.32B</div>
+                  <div class="bar-pill-body" style="height:84%" onclick="triggerDrillDown('Hồ Chí Minh', '18.320.500.000 ₫')" title="TP.HCM: 18.320.500.000 ₫"></div>
+                  <div class="bar-x-label">TP.HCM</div>
+                </div>
+                <div class="chart-bar-item">
+                  <div class="bar-data-label">6.85B</div>
+                  <div class="bar-pill-body" style="height:32%" onclick="triggerDrillDown('Đà Nẵng', '6.850.200.000 ₫')" title="Đà Nẵng: 6.850.200.000 ₫"></div>
+                  <div class="bar-x-label">Đà Nẵng</div>
+                </div>
+                <div class="chart-bar-item">
+                  <div class="bar-data-label">7.21B</div>
+                  <div class="bar-pill-body" style="height:38%" onclick="triggerDrillDown('Hải Phòng', '7.210.000.000 ₫')" title="Hải Phòng: 7.210.000.000 ₫"></div>
+                  <div class="bar-x-label">Hải Phòng</div>
+                </div>
+                <div class="chart-bar-item">
+                  <div class="bar-data-label">4.33B</div>
+                  <div class="bar-pill-body" style="height:22%" onclick="triggerDrillDown('Cần Thơ', '4.330.000.000 ₫')" title="Cần Thơ: 4.330.000.000 ₫"></div>
+                  <div class="bar-x-label">Cần Thơ</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:8px">
+                <span>Đơn vị: <b>Tỷ VNĐ (Billion)</b> &bull; Đồng bộ 100% với bảng</span>
+                <span>Tổng: <b style="color:var(--primary)">49.16 Tỷ</b></span>
+              </div>
+            </div>
+
+            <!-- Right: Full Data Table -->
+            <div class="viewer-widget-card">
+              <div class="widget-header">
+                <div>
+                  <span class="widget-title">Bảng Số Liệu Chi Tiết</span>
+                  <p style="font-size:11px;color:var(--text-muted);margin-top:2px">Click dòng để xem danh sách đại lý thu</p>
+                </div>
+                <span class="col-type-badge">5 ĐƠN VỊ</span>
+              </div>
+              <div class="table-responsive" style="max-height:280px;overflow-y:auto">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th class="col-cb"><input type="checkbox" title="Chọn tất cả" onchange="toggleSelectAllBI(this)" style="cursor:pointer"></th>
+                      <th class="col-stt">STT</th>
+                      <th class="col-action">Thao tác</th>
+                      <th class="col-text">Tỉnh / Thành Phố</th>
+                      <th class="col-money">Tổng Hoa Hồng (VNĐ)</th>
+                      <th class="col-number">Số Đơn Vị</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="clickable-row" onclick="triggerDrillDown('Hà Nội', '12.450.000.000 ₫')">
+                      <td class="col-cb" onclick="event.stopPropagation()"><input type="checkbox" class="bi-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">1</td>
+                      <td class="col-action" onclick="event.stopPropagation()">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem nhanh dữ liệu Hà Nội" onclick="notify('Xem nhanh dữ liệu Hà Nội')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down chi tiết Hà Nội" onclick="triggerDrillDown('Hà Nội', '12.450.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text font-medium"><span class="cell-truncate font-semibold" title="BHXH Thành phố Hà Nội">BHXH TP Hà Nội</span></td>
+                      <td class="col-money">12.450.000.000 ₫</td>
+                      <td class="col-number">128</td>
+                    </tr>
+                    <tr class="clickable-row" onclick="triggerDrillDown('Hồ Chí Minh', '18.320.500.000 ₫')">
+                      <td class="col-cb" onclick="event.stopPropagation()"><input type="checkbox" class="bi-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">2</td>
+                      <td class="col-action" onclick="event.stopPropagation()">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem nhanh dữ liệu TP.HCM" onclick="notify('Xem nhanh dữ liệu TP.HCM')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down chi tiết TP.HCM" onclick="triggerDrillDown('Hồ Chí Minh', '18.320.500.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text font-medium"><span class="cell-truncate font-semibold" title="BHXH Thành phố Hồ Chí Minh">BHXH TP Hồ Chí Minh</span></td>
+                      <td class="col-money">18.320.500.000 ₫</td>
+                      <td class="col-number">156</td>
+                    </tr>
+                    <tr class="clickable-row" onclick="triggerDrillDown('Đà Nẵng', '6.850.200.000 ₫')">
+                      <td class="col-cb" onclick="event.stopPropagation()"><input type="checkbox" class="bi-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">3</td>
+                      <td class="col-action" onclick="event.stopPropagation()">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem nhanh dữ liệu Đà Nẵng" onclick="notify('Xem nhanh dữ liệu Đà Nẵng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down chi tiết Đà Nẵng" onclick="triggerDrillDown('Đà Nẵng', '6.850.200.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text font-medium"><span class="cell-truncate font-semibold" title="BHXH Thành phố Đà Nẵng">BHXH TP Đà Nẵng</span></td>
+                      <td class="col-money">6.850.200.000 ₫</td>
+                      <td class="col-number">89</td>
+                    </tr>
+                    <tr class="clickable-row" onclick="triggerDrillDown('Hải Phòng', '7.210.000.000 ₫')">
+                      <td class="col-cb" onclick="event.stopPropagation()"><input type="checkbox" class="bi-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">4</td>
+                      <td class="col-action" onclick="event.stopPropagation()">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem nhanh dữ liệu Hải Phòng" onclick="notify('Xem nhanh dữ liệu Hải Phòng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down chi tiết Hải Phòng" onclick="triggerDrillDown('Hải Phòng', '7.210.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text font-medium"><span class="cell-truncate font-semibold" title="BHXH Thành phố Hải Phòng">BHXH TP Hải Phòng</span></td>
+                      <td class="col-money">7.210.000.000 ₫</td>
+                      <td class="col-number">76</td>
+                    </tr>
+                    <tr class="clickable-row" onclick="triggerDrillDown('Cần Thơ', '4.330.000.000 ₫')">
+                      <td class="col-cb" onclick="event.stopPropagation()"><input type="checkbox" class="bi-row-cb" style="cursor:pointer"></td>
+                      <td class="col-stt">5</td>
+                      <td class="col-action" onclick="event.stopPropagation()">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                          <button class="action-icon-btn btn-action-view" title="Xem nhanh dữ liệu Cần Thơ" onclick="notify('Xem nhanh dữ liệu Cần Thơ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button class="action-icon-btn btn-action-drill" title="Drill-down chi tiết Cần Thơ" onclick="triggerDrillDown('Cần Thơ', '4.330.000.000 ₫')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        </div>
+                      </td>
+                      <td class="col-text font-medium"><span class="cell-truncate font-semibold" title="BHXH Thành phố Cần Thơ">BHXH TP Cần Thơ</span></td>
+                      <td class="col-money">4.330.000.000 ₫</td>
+                      <td class="col-number">58</td>
+                    </tr>
+                    <tr style="background:var(--bg-subtle);font-weight:700">
+                      <td colspan="4" style="text-align:left;padding-left:14px">TỔNG CỘNG</td>
+                      <td class="col-money" style="color:var(--primary)">49.160.700.000 ₫</td>
+                      <td class="col-number">507</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 1: ASYNC EXPORT TASK SIMULATOR (SXSSF STREAMING ENGINE)
+       ========================================================================== -->
+  <div class="modal-backdrop" id="exportModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Xuất Báo Cáo Streaming (SXSSF Engine)
+        </span>
+        <button class="btn-icon" onclick="closeExportModal()">✕</button>
+      </div>
+      
+      <div id="exportFormState">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Định dạng tệp xuất</label>
+            <select class="form-select" id="exportFormat">
+              <option value="xlsx">Excel Workbook (.xlsx) — SXSSF Streaming 100k rows</option>
+              <option value="csv">CSV (UTF-8 with BOM) — Standard</option>
+              <option value="pdf">PDF Báo Cáo Tài Chính A4</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phạm vi dữ liệu</label>
+            <select class="form-select">
+              <option>Toàn bộ bản ghi theo bộ lọc (507 đơn vị)</option>
+              <option>Chỉ xuất các dòng đang xem trước (5 dòng)</option>
+            </select>
+          </div>
+          <label class="checkbox-label"><input type="checkbox" checked> Tự động nén ZIP nếu dung lượng vượt quá 20MB</label>
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button class="btn btn-secondary" onclick="closeExportModal()">Hủy</button>
+          <button class="btn btn-primary" onclick="startAsyncExport()">Bắt Đầu Xuất File</button>
+        </div>
+      </div>
+
+      <!-- Export Progress State -->
+      <div id="exportProgressState" style="display:none;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span id="exportStatusText">Đang khởi tạo kết nối Oracle Streaming...</span>
+          <b id="exportPercent">25%</b>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="exportProgressBar" style="width:25%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">
+          Hàng đợi: <b>RPT_EXPORT_TASKS #EXP-202608-0092</b> &bull; Engine: Apache POI SXSSF
+        </div>
+        <div id="exportDownloadAction" style="display:none;margin-top:10px">
+          <a href="#" class="btn btn-success" style="width:100%" onclick="notify('Đã tải xuống file báo cáo hoàn tất!'); closeExportModal();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Tải Xuống File (Token HMAC-SHA256: 15m)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 2: EMBED SDK & INTEGRATION GENERATOR
+       ========================================================================== -->
+  <div class="modal-backdrop" id="embedModal">
+    <div class="modal-box" style="width:600px">
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Mã Nhúng Tích Hợp Đa Nền Tảng (Embed SDK)
+        </span>
+        <button class="btn-icon" onclick="closeEmbedModal()">✕</button>
+      </div>
+      
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Chọn chế độ tích hợp</label>
+          <select class="form-select" id="embedModeSelect" onchange="updateEmbedSnippet(this.value)">
+            <option value="iframe">Chế độ 1: Iframe URL với JWT Token (DIP CMS / Natcash)</option>
+            <option value="react">Chế độ 2: React Component NPM (@mascom/dynamic-report-builder)</option>
+            <option value="rest">Chế độ 3: Headless REST API (Backend to Backend)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Mã nhúng tương ứng</label>
+          <pre class="sql-code-block" id="embedSnippet" style="height:140px">&lt;iframe 
+  src="https://report.mascom.vn/embed/reports/viewer?tenant=DIP_BHXH&templateCode=BC_DOANH_THU_BHXH_TINH&token=eyJhbGciOiJIUzI1..."
+  width="100%" 
+  height="750px" 
+  frameborder="0"&gt;
+&lt;/iframe&gt;</pre>
+        </div>
+      </div>
+      
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button class="btn btn-secondary" onclick="closeEmbedModal()">Đóng</button>
+        <button class="btn btn-primary" onclick="copyEmbedSnippet()">Sao Chép Mã Nhúng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: DRILL-DOWN MODAL
+       ========================================================================== -->
+  <div class="modal-backdrop" id="drillDownModal">
+    <div class="modal-box" style="width:620px">
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Chi Tiết Đơn Vị BHXH — <span id="drillDownProvinceTitle">Hà Nội</span>
+        </span>
+        <button class="btn-icon" onclick="closeDrillDownModal()">✕</button>
+      </div>
+      
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px">
+          <span>Tổng doanh thu hoa hồng: <b style="color:var(--success)" id="drillDownTotal">12.450.000.000 VNĐ</b></span>
+          <span class="badge-tenant">128 ĐƠN VỊ</span>
+        </div>
+        
+        <div class="table-responsive" style="max-height:260px;overflow-y:auto">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th class="col-cb"><input type="checkbox" title="Chọn tất cả" onchange="toggleSelectAllModal(this)" style="cursor:pointer"></th>
+                <th class="col-stt">STT</th>
+                <th class="col-action">Thao tác</th>
+                <th class="col-code">Mã Đơn Vị</th>
+                <th class="col-text">Tên Đơn Vị / Đại Lý Thu</th>
+                <th class="col-money">Hoa Hồng (VNĐ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-cb"><input type="checkbox" class="modal-row-cb" style="cursor:pointer"></td>
+                <td class="col-stt">1</td>
+                <td class="col-action">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                    <button class="action-icon-btn btn-action-view" title="Xem chi tiết đơn vị" onclick="notify('Xem chi tiết BHXH Ba Đình')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button class="action-icon-btn btn-action-export" title="Trích xuất dữ liệu" onclick="notify('Đã trích xuất BHXH Ba Đình')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                  </div>
+                </td>
+                <td class="col-code">BHXH_HN_01</td>
+                <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Quận Ba Đình">BHXH Quận Ba Đình</span></td>
+                <td class="col-money">1.850.000.000 ₫</td>
+              </tr>
+              <tr>
+                <td class="col-cb"><input type="checkbox" class="modal-row-cb" style="cursor:pointer"></td>
+                <td class="col-stt">2</td>
+                <td class="col-action">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                    <button class="action-icon-btn btn-action-view" title="Xem chi tiết đơn vị" onclick="notify('Xem chi tiết BHXH Hoàn Kiếm')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button class="action-icon-btn btn-action-export" title="Trích xuất dữ liệu" onclick="notify('Đã trích xuất BHXH Hoàn Kiếm')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                  </div>
+                </td>
+                <td class="col-code">BHXH_HN_02</td>
+                <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Quận Hoàn Kiếm">BHXH Quận Hoàn Kiếm</span></td>
+                <td class="col-money">2.120.000.000 ₫</td>
+              </tr>
+              <tr>
+                <td class="col-cb"><input type="checkbox" class="modal-row-cb" style="cursor:pointer"></td>
+                <td class="col-stt">3</td>
+                <td class="col-action">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                    <button class="action-icon-btn btn-action-view" title="Xem chi tiết đơn vị" onclick="notify('Xem chi tiết BHXH Cầu Giấy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button class="action-icon-btn btn-action-export" title="Trích xuất dữ liệu" onclick="notify('Đã trích xuất BHXH Cầu Giấy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                  </div>
+                </td>
+                <td class="col-code">BHXH_HN_03</td>
+                <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Quận Cầu Giấy">BHXH Quận Cầu Giấy</span></td>
+                <td class="col-money">3.450.000.000 ₫</td>
+              </tr>
+              <tr>
+                <td class="col-cb"><input type="checkbox" class="modal-row-cb" style="cursor:pointer"></td>
+                <td class="col-stt">4</td>
+                <td class="col-action">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                    <button class="action-icon-btn btn-action-view" title="Xem chi tiết đơn vị" onclick="notify('Xem chi tiết BHXH Đống Đa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button class="action-icon-btn btn-action-export" title="Trích xuất dữ liệu" onclick="notify('Đã trích xuất BHXH Đống Đa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                  </div>
+                </td>
+                <td class="col-code">BHXH_HN_04</td>
+                <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Quận Đống Đa">BHXH Quận Đống Đa</span></td>
+                <td class="col-money">2.780.000.000 ₫</td>
+              </tr>
+              <tr>
+                <td class="col-cb"><input type="checkbox" class="modal-row-cb" style="cursor:pointer"></td>
+                <td class="col-stt">5</td>
+                <td class="col-action">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                    <button class="action-icon-btn btn-action-view" title="Xem chi tiết đơn vị" onclick="notify('Xem chi tiết BHXH Hai Bà Trưng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button class="action-icon-btn btn-action-export" title="Trích xuất dữ liệu" onclick="notify('Đã trích xuất BHXH Hai Bà Trưng')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                  </div>
+                </td>
+                <td class="col-code">BHXH_HN_05</td>
+                <td class="col-text"><span class="cell-truncate font-medium" title="BHXH Quận Hai Bà Trưng">BHXH Quận Hai Bà Trưng</span></td>
+                <td class="col-money">2.250.000.000 ₫</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-secondary" onclick="closeDrillDownModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT LOGIC & DYNAMIC ACTIONS
+       ========================================================================== -->
+  <script>
+    // --- Mode Tab Switcher ---
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const viewPanels = document.querySelectorAll('.view-panel');
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const targetView = btn.dataset.view;
+        viewPanels.forEach(p => p.classList.remove('active'));
+        const activePanel = document.getElementById(targetView);
+        if (activePanel) {
+          activePanel.classList.add('active');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // --- Dual-Mode Builder (GUI vs SQL Studio) ---
+    function switchBuilderMode(mode) {
+      const guiContainer = document.getElementById('guiBuilderContainer');
+      const sqlContainer = document.getElementById('sqlStudioContainer');
+      const btnGui = document.getElementById('btnGuiMode');
+      const btnSql = document.getElementById('btnSqlMode');
+
+      if (mode === 'gui') {
+        guiContainer.style.display = 'block';
+        sqlContainer.style.display = 'none';
+        btnGui.classList.add('active');
+        btnSql.classList.remove('active');
+        notify('Đã chuyển sang chế độ No-Code GUI Builder');
+      } else {
+        guiContainer.style.display = 'none';
+        sqlContainer.style.display = 'block';
+        btnSql.classList.add('active');
+        btnGui.classList.remove('active');
+        notify('Đã chuyển sang chế độ Low-Code Monaco SQL Editor');
+      }
+    }
+
+    function syncGuiToSql() {
+      generateSQL();
+      const generatedSql = document.getElementById('sqlOutput').textContent;
+      document.getElementById('monacoSqlInput').value = generatedSql;
+      notify('Đã đồng bộ cấu hình GUI vào Monaco SQL Studio');
+    }
+
+    function insertSqlSnippet(snippet) {
+      const textarea = document.getElementById('monacoSqlInput');
+      textarea.value += '\n' + snippet;
+      notify(`Đã chèn cú pháp: ${snippet}`);
+    }
+
+    // --- Multi-DataSource Switcher ---
+    function changeDataSource(dsKey) {
+      const label = document.getElementById('activeDsLabel');
+      const treeArea = document.getElementById('schemaTreeArea');
+      const tableBadge = document.getElementById('tableCountBadge');
+
+      if (dsKey === 'postgres') {
+        label.textContent = 'PostgreSQL (Analytics DWH) • Read-Only';
+        tableBadge.textContent = '3 BẢNG DWH';
+        treeArea.innerHTML = `
+          <div class="tree-table-group expanded">
+            <div class="tree-table-header" onclick="toggleTableGroup(this)">
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span class="table-name">fact_dossiers</span>
+              <span class="table-tag">Fact</span>
+            </div>
+            <div class="tree-columns-list">
+              <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'f.dossier_id', 'BIGINT')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>dossier_id</span></span><span class="col-type-badge">BIGINT</span></div>
+              <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'f.total_fee', 'NUMERIC')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>total_fee</span></span><span class="col-type-badge">NUMERIC</span></div>
+            </div>
+          </div>
+          <div class="tree-table-group">
+            <div class="tree-table-header" onclick="toggleTableGroup(this)">
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span class="table-name">dim_agencies</span>
+              <span class="table-tag">Dim</span>
+            </div>
+            <div class="tree-columns-list">
+              <div class="tree-col-item" onclick="toggleColumnSelect(this, 'a.agency_name', 'VARCHAR')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>agency_name</span></span><span class="col-type-badge">VARCHAR</span></div>
+            </div>
+          </div>
+        `;
+        notify('Đã kết nối DataSource: PostgreSQL (Analytics DWH)');
+      } else if (dsKey === 'clickhouse') {
+        label.textContent = 'ClickHouse (Payment Logs) • Read-Only';
+        tableBadge.textContent = '2 LOG TABLES';
+        treeArea.innerHTML = `
+          <div class="tree-table-group expanded">
+            <div class="tree-table-header" onclick="toggleTableGroup(this)">
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg class="table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span class="table-name">log_api_requests</span>
+              <span class="table-tag">Log</span>
+            </div>
+            <div class="tree-columns-list">
+              <div class="tree-col-item selected" onclick="toggleColumnSelect(this, 'l.request_time', 'DateTime64')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>request_time</span></span><span class="col-type-badge">DateTime64</span></div>
+              <div class="tree-col-item" onclick="toggleColumnSelect(this, 'l.latency_ms', 'UInt32')"><span class="col-name-wrap"><svg class="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>latency_ms</span></span><span class="col-type-badge">UInt32</span></div>
+            </div>
+          </div>
+        `;
+        notify('Đã kết nối DataSource: ClickHouse (Payment Logs)');
+      } else {
+        label.textContent = 'Oracle XE (DIP Core OLTP) • Read-Only';
+        tableBadge.textContent = '4 BẢNG';
+        notify('Đã kết nối DataSource: Oracle XE (DIP Core OLTP)');
+      }
+    }
+
+    // --- Toast Notification Helper ---
+    function notify(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-msg';
+      toast.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'all 0.2s ease-out';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 200);
+      }, 2200);
+    }
+
+    // --- Dark / Light Theme Switcher ---
+    const themeToggleBtn = document.getElementById('themeToggle');
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      notify(`Đã chuyển sang giao diện ${nextTheme === 'dark' ? 'Tối' : 'Sáng'}`);
+    });
+
+    // --- Sidebar Accordion Toggle ---
+    function toggleTableGroup(headerEl) {
+      const group = headerEl.closest('.tree-table-group');
+      group.classList.toggle('expanded');
+    }
+
+    // --- Schema Search Filter ---
+    const schemaSearchInput = document.getElementById('schemaSearch');
+    schemaSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const groups = document.querySelectorAll('.tree-table-group');
+      groups.forEach(group => {
+        const tableName = group.querySelector('.table-name').textContent.toLowerCase();
+        const colItems = group.querySelectorAll('.tree-col-item');
+        let hasMatch = tableName.includes(q);
+        
+        colItems.forEach(col => {
+          const colName = col.textContent.toLowerCase();
+          if (colName.includes(q) || !q) {
+            col.style.display = 'flex';
+            if (q) hasMatch = true;
+          } else {
+            col.style.display = 'none';
+          }
+        });
+
+        if (hasMatch || !q) {
+          group.style.display = 'block';
+          if (q) group.classList.add('expanded');
+        } else {
+          group.style.display = 'none';
+        }
+      });
+    });
+
+    // --- Toggle Column In Schema Tree & Add to Builder Table ---
+    function toggleColumnSelect(itemEl, colIdentifier, dataType) {
+      itemEl.classList.toggle('selected');
+      const isSelected = itemEl.classList.contains('selected');
+      const tableBody = document.getElementById('columnsTableBody');
+
+      if (isSelected) {
+        if (!tableBody.querySelector(`[data-col="${colIdentifier}"]`)) {
+          const count = tableBody.children.length + 1;
+          const tr = document.createElement('tr');
+          tr.setAttribute('data-col', colIdentifier);
+          const colShort = colIdentifier.split('.')[1] || colIdentifier;
+          const isNumeric = dataType === 'NUMBER' || dataType === 'NUMERIC' || dataType === 'BIGINT';
+          
+          tr.innerHTML = `
+            <td><span class="drag-handle">:: ${count}</span></td>
+            <td><span style="font-family:var(--font-mono);font-weight:600;color:var(--primary)">${colIdentifier}</span></td>
+            <td><input class="form-input" style="height:28px;font-size:11.5px;font-weight:600" value="${colShort}" oninput="generateSQL()"></td>
+            <td>
+              <select class="agg-select" onchange="generateSQL()">
+                <option value="NONE">None</option>
+                ${isNumeric ? '<option value="SUM" selected>SUM</option><option value="AVG">AVG</option>' : ''}
+                <option value="COUNT">COUNT</option>
+              </select>
+            </td>
+            <td><span class="col-type-badge">${dataType}</span></td>
+            <td style="text-align:center">
+              <button class="btn-trash" onclick="removeColRow(this)" title="Xóa">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </td>
+          `;
+          tableBody.appendChild(tr);
+          notify(`Đã thêm cột ${colIdentifier}`);
+        }
+      } else {
+        const existingRow = tableBody.querySelector(`[data-col="${colIdentifier}"]`);
+        if (existingRow) {
+          existingRow.remove();
+          notify(`Đã xóa cột ${colIdentifier}`);
+        }
+      }
+      updateColCount();
+      generateSQL();
+    }
+
+    function removeColRow(btn) {
+      const row = btn.closest('tr');
+      const colId = row.getAttribute('data-col');
+      row.remove();
+      
+      const schemaItems = document.querySelectorAll('.tree-col-item');
+      schemaItems.forEach(item => {
+        if (item.getAttribute('onclick')?.includes(colId)) {
+          item.classList.remove('selected');
+        }
+      });
+      
+      updateColCount();
+      generateSQL();
+    }
+
+    function updateColCount() {
+      const rows = document.querySelectorAll('#columnsTableBody tr');
+      document.getElementById('columnCount').textContent = rows.length;
+      rows.forEach((r, idx) => {
+        const handle = r.querySelector('.drag-handle');
+        if (handle) handle.textContent = `:: ${idx + 1}`;
+      });
+    }
+
+    function addCalculatedFieldModal() {
+      const fieldName = prompt('Nhập công thức cột tính toán (Ví dụ: cr.COMMISSION_AMOUNT * 0.1):', 'cr.COMMISSION_AMOUNT * 0.1');
+      if (fieldName) {
+        const tableBody = document.getElementById('columnsTableBody');
+        const count = tableBody.children.length + 1;
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-col', fieldName);
+        tr.innerHTML = `
+          <td><span class="drag-handle">:: ${count}</span></td>
+          <td><span style="font-family:var(--font-mono);font-weight:600;color:var(--purple)">${fieldName}</span></td>
+          <td><input class="form-input" style="height:28px;font-size:11.5px;font-weight:600" value="THUẾ_VAT_10" oninput="generateSQL()"></td>
+          <td><select class="agg-select" onchange="generateSQL()"><option value="SUM" selected>SUM</option><option value="NONE">None</option></select></td>
+          <td><span class="col-type-badge" style="background:var(--purple-subtle);color:var(--purple)">CALCULATED</span></td>
+          <td style="text-align:center">
+            <button class="btn-trash" onclick="this.closest('tr').remove(); updateColCount(); generateSQL();">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+        updateColCount();
+        generateSQL();
+        notify('Đã thêm cột tính toán mới');
+      }
+    }
+
+    // --- Dynamic JOIN Builder ---
+    function addJoinRow() {
+      const container = document.getElementById('joinsContainer');
+      const div = document.createElement('div');
+      div.className = 'join-row-card';
+      div.innerHTML = `
+        <div>
+          <select class="form-select" onchange="generateSQL()">
+            <option value="INNER JOIN">INNER JOIN</option>
+            <option value="LEFT JOIN">LEFT JOIN</option>
+            <option value="RIGHT JOIN">RIGHT JOIN</option>
+          </select>
+        </div>
+        <div>
+          <select class="form-select" onchange="generateSQL()">
+            <option value="CFG_PAYMENTS p">CFG_PAYMENTS (p)</option>
+            <option value="CFG_COMMISSION_RATES cr">CFG_COMMISSION_RATES (cr)</option>
+            <option value="DIM_DATE d">DIM_DATE (d)</option>
+          </select>
+        </div>
+        <div>
+          <select class="form-select" onchange="generateSQL()">
+            <option value="u.CODE">ON u.CODE =</option>
+            <option value="u.PROVINCE_CODE">ON u.PROVINCE_CODE =</option>
+          </select>
+        </div>
+        <div>
+          <select class="form-select" onchange="generateSQL()">
+            <option value="p.UNIT_CODE">p.UNIT_CODE</option>
+            <option value="p.PROVINCE_ID">p.PROVINCE_ID</option>
+          </select>
+        </div>
+        <button class="btn-trash" onclick="this.closest('.join-row-card').remove(); generateSQL();" title="Xóa liên kết">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      `;
+      container.appendChild(div);
+      generateSQL();
+      notify('Đã thêm liên kết JOIN');
+    }
+
+    // --- Dynamic Fixed Rules & User Params ---
+    function addFixedRule() {
+      const wrap = document.getElementById('fixedRulesWrap');
+      const div = document.createElement('div');
+      div.className = 'rule-row';
+      div.innerHTML = `
+        <select class="form-select" onchange="generateSQL()"><option>AND</option><option>OR</option></select>
+        <select class="form-select" onchange="generateSQL()"><option value="u.PROVINCE_CODE">u.PROVINCE_CODE</option><option value="u.STATUS">u.STATUS</option></select>
+        <select class="form-select" onchange="generateSQL()"><option value="=">=</option><option value="IN">IN</option><option value="!=">!=</option></select>
+        <input class="form-input" placeholder="Giá trị..." oninput="generateSQL()">
+        <button class="btn-trash" onclick="this.closest('.rule-row').remove(); generateSQL();">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      `;
+      wrap.appendChild(div);
+      generateSQL();
+    }
+
+    function addDynamicParam() {
+      const wrap = document.getElementById('dynamicParamsWrap');
+      const div = document.createElement('div');
+      div.className = 'param-rule-row';
+      div.innerHTML = `
+        <input class="form-input" placeholder="paramName" style="font-family:var(--font-mono);font-size:11px">
+        <select class="form-select"><option>Text</option><option>Dropdown</option><option>Date</option></select>
+        <input class="form-input" placeholder="Mặc định...">
+        <label class="checkbox-label"><input type="checkbox"> Bắt buộc</label>
+        <button class="btn-trash" onclick="this.closest('.param-rule-row').remove();">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      `;
+      wrap.appendChild(div);
+      notify('Đã thêm tham số đầu vào');
+    }
+
+    // --- Dynamic Real-Time SQL Generator Engine ---
+    function generateSQL() {
+      const rows = document.querySelectorAll('#columnsTableBody tr');
+      const selectFields = [];
+      const groupByFields = [];
+
+      rows.forEach(r => {
+        const col = r.getAttribute('data-col') || 'u.NAME';
+        const alias = r.querySelector('input')?.value || col;
+        const agg = r.querySelector('.agg-select')?.value || 'NONE';
+
+        if (agg === 'NONE') {
+          selectFields.push(`  ${col} AS "${alias}"`);
+          groupByFields.push(col);
+        } else if (agg === 'SUM') {
+          selectFields.push(`  SUM(${col}) AS "${alias}"`);
+        } else if (agg === 'COUNT') {
+          selectFields.push(`  COUNT(${col}) AS "${alias}"`);
+        } else if (agg === 'AVG') {
+          selectFields.push(`  AVG(${col}) AS "${alias}"`);
+        } else {
+          selectFields.push(`  ${agg}(${col}) AS "${alias}"`);
+        }
+      });
+
+      const joins = [];
+      const joinRows = document.querySelectorAll('#joinsContainer .join-row-card');
+      joinRows.forEach(j => {
+        const selects = j.querySelectorAll('select');
+        const joinType = selects[0].value;
+        const targetTable = selects[1].value;
+        const leftCol = selects[2].value;
+        const rightCol = selects[3].value;
+        joins.push(`${joinType} ${targetTable}\n  ${leftCol} ${rightCol}`);
+      });
+
+      let sql = `SELECT\n${selectFields.join(',\n') || '  *'}\nFROM CFG_BHXH_UNITS u\n`;
+      if (joins.length > 0) {
+        sql += joins.join('\n') + '\n';
+      }
+      sql += `WHERE u.STATUS = 1\n  AND (:provinceCode IS NULL OR u.PROVINCE_CODE = :provinceCode)\n  AND cr.TRANS_DATE BETWEEN TO_DATE(:fromDate, 'DD/MM/YYYY') \n                        AND TO_DATE(:toDate, 'DD/MM/YYYY')\n`;
+      
+      if (groupByFields.length > 0 && selectFields.some(s => s.includes('SUM(') || s.includes('COUNT(') || s.includes('AVG('))) {
+        sql += `GROUP BY ${groupByFields.join(', ')}\n`;
+      }
+      sql += `ORDER BY 2 DESC;`;
+
+      const outputEl = document.getElementById('sqlOutput');
+      if (outputEl) outputEl.textContent = sql;
+    }
+
+    function formatSQL() {
+      generateSQL();
+      notify('Đã format cú pháp SQL');
+    }
+
+    function runQueryPreview() {
+      generateSQL();
+      notify('Truy vấn hoàn tất: 5 bản ghi trong 11 ms');
+    }
+
+    function copySQLText() {
+      const sql = document.getElementById('sqlOutput').textContent;
+      navigator.clipboard.writeText(sql).then(() => {
+        notify('Đã sao chép SQL vào bộ nhớ đệm');
+      });
+    }
+
+    function updateReportTitle(val) {
+      document.getElementById('viewerReportTitle').textContent = val || 'Báo Cáo Doanh Thu BHXH';
+    }
+
+    function selectBIChart(cardEl, chartType) {
+      document.querySelectorAll('.chart-card-choice').forEach(c => c.classList.remove('active'));
+      cardEl.classList.add('active');
+      notify(`Đã chuyển sang kiểu biểu đồ: ${cardEl.innerText.trim()}`);
+    }
+
+    function changeColorPalette(theme) {
+      const bars = document.querySelectorAll('.bar-pill-body');
+      bars.forEach(b => {
+        if (theme === 'emerald') {
+          b.style.background = '#059669';
+        } else if (theme === 'sunset') {
+          b.style.background = '#d97706';
+        } else {
+          b.style.background = '#1d4ed8';
+        }
+      });
+      notify('Đã cập nhật bảng màu biểu đồ');
+    }
+
+    function applyViewerFilters() {
+      notify('Đã áp dụng bộ lọc và cập nhật số liệu');
+    }
+
+    // --- Async Export Modal Logic (SXSSF Engine) ---
+    function openExportModal() {
+      document.getElementById('exportModal').classList.add('active');
+      document.getElementById('exportFormState').style.display = 'block';
+      document.getElementById('exportProgressState').style.display = 'none';
+      document.getElementById('exportDownloadAction').style.display = 'none';
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('active');
+    }
+
+    function startAsyncExport() {
+      document.getElementById('exportFormState').style.display = 'none';
+      document.getElementById('exportProgressState').style.display = 'flex';
+      
+      const bar = document.getElementById('exportProgressBar');
+      const percent = document.getElementById('exportPercent');
+      const statusText = document.getElementById('exportStatusText');
+      
+      let p = 15;
+      bar.style.width = p + '%';
+      percent.textContent = p + '%';
+      statusText.textContent = 'Đang khởi tạo Apache POI SXSSF Streaming...';
+      
+      const timer = setInterval(() => {
+        p += 25;
+        if (p >= 100) {
+          p = 100;
+          clearInterval(timer);
+          bar.style.width = '100%';
+          percent.textContent = '100%';
+          statusText.textContent = '✅ Đã hoàn tất đóng gói file Excel Streaming!';
+          document.getElementById('exportDownloadAction').style.display = 'block';
+        } else {
+          bar.style.width = p + '%';
+          percent.textContent = p + '%';
+          if (p === 40) statusText.textContent = 'Đang đọc Oracle Stream (fetch 500 lines/RAM)...';
+          if (p === 65) statusText.textContent = 'Đang nén dữ liệu và định dạng tiêu đề...';
+          if (p === 90) statusText.textContent = 'Đang sinh Token bảo mật Pre-signed...';
+        }
+      }, 500);
+    }
+
+    // --- Embed SDK Modal Logic ---
+    function openEmbedModal() {
+      document.getElementById('embedModal').classList.add('active');
+    }
+
+    function closeEmbedModal() {
+      document.getElementById('embedModal').classList.remove('active');
+    }
+
+    function updateEmbedSnippet(mode) {
+      const code = document.getElementById('embedSnippet');
+      if (mode === 'react') {
+        code.textContent = `import { DynamicReportViewer } from '@mascom/dynamic-report-builder';
+
+export function ReportPage() {
+  return (
+    <DynamicReportViewer
+      tenantId="DIP_BHXH"
+      templateCode="BC_DOANH_THU_BHXH_TINH"
+      apiEndpoint="https://report.mascom.vn/api/v4"
+      jwtToken="eyJhbGciOiJIUzI1NiIsIn..."
+      onExport={(task) => console.log('Export started', task)}
+    />
+  );
+}`;
+      } else if (mode === 'rest') {
+        code.textContent = `// Headless REST API Call
+POST /api/v4/reports/query/execute
+Headers:
+  X-Tenant-Id: DIP_BHXH
+  Authorization: Bearer eyJhbGciOiJIUz...
+Body:
+{
+  "templateCode": "BC_DOANH_THU_BHXH_TINH",
+  "params": {
+    "fromDate": "01/08/2026",
+    "toDate": "31/08/2026",
+    "provinceCode": "01"
+  }
+}`;
+      } else {
+        code.textContent = `<iframe 
+  src="https://report.mascom.vn/embed/reports/viewer?tenant=DIP_BHXH&templateCode=BC_DOANH_THU_BHXH_TINH&token=eyJhbGciOiJIUzI1..."
+  width="100%" 
+  height="750px" 
+  frameborder="0">
+</iframe>`;
+      }
+    }
+
+    function copyEmbedSnippet() {
+      const snippet = document.getElementById('embedSnippet').textContent;
+      navigator.clipboard.writeText(snippet).then(() => {
+        notify('Đã sao chép mã nhúng SDK');
+        closeEmbedModal();
+      });
+    }
+
+    // --- Drill-down Modal Logic ---
+    function triggerDrillDown(provinceName, totalAmount) {
+      document.getElementById('drillDownProvinceTitle').textContent = provinceName;
+      document.getElementById('drillDownTotal').textContent = totalAmount + ' VNĐ';
+      document.getElementById('drillDownModal').classList.add('active');
+    }
+
+    function closeDrillDownModal() {
+      document.getElementById('drillDownModal').classList.remove('active');
+    }
+
+    // Keyboard Shortcuts (Ctrl + Enter)
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runQueryPreview();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        notify('Đã lưu mẫu báo cáo thành công');
+      }
+    });
+
+    // Initialize SQL on start
+    generateSQL();
+  
+    function toggleSelectAll(master) {
+      const cbs = document.querySelectorAll('.preview-row-cb');
+      cbs.forEach(cb => cb.checked = master.checked);
+    }
+    function toggleSelectAllBI(master) {
+      const cbs = document.querySelectorAll('.bi-row-cb');
+      cbs.forEach(cb => cb.checked = master.checked);
+    }
+    function toggleSelectAllModal(master) {
+      const cbs = document.querySelectorAll('.modal-row-cb');
+      cbs.forEach(cb => cb.checked = master.checked);
+    }
+
+  </script>
+</body>
+</html>

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,25 +47,36 @@ public class DataSourceController {
             @RequestParam(name = "listDatasource", required = false) String listDatasource,
             @RequestParam(name = "allowedCodes", required = false) String allowedCodes) {
         String tenantId = TenantContext.getTenantIdOrDefault();
+        TenantContext ctx = TenantContext.get();
+        Set<String> sessionAllowed = ctx != null ? ctx.getAllowedDataSources() : Collections.emptySet();
+
         String filterParam = (listDatasource != null && !listDatasource.trim().isEmpty()) ? listDatasource : allowedCodes;
+
+        Set<String> allowedSet = new HashSet<>();
+        if (filterParam != null && !filterParam.trim().isEmpty() && !ReportConstants.FILTER_ALL.equalsIgnoreCase(filterParam.trim())) {
+            for (String raw : filterParam.split(",")) {
+                if (raw != null && !raw.trim().isEmpty()) {
+                    allowedSet.add(raw.trim());
+                }
+            }
+        }
+
+        // Nếu phiên làm việc có giới hạn DataSource ủy quyền, lấy giao tập hợp
+        if (!sessionAllowed.isEmpty()) {
+            if (allowedSet.isEmpty()) {
+                allowedSet.addAll(sessionAllowed);
+            } else {
+                allowedSet.retainAll(sessionAllowed);
+            }
+        }
 
         List<DataSourceConfig> allForTenant = dataSourceRepository.findByTenantId(tenantId);
 
-        if (filterParam == null || filterParam.trim().isEmpty() || ReportConstants.FILTER_ALL.equalsIgnoreCase(filterParam.trim())) {
+        if (allowedSet.isEmpty() && sessionAllowed.isEmpty() && (filterParam == null || filterParam.trim().isEmpty() || ReportConstants.FILTER_ALL.equalsIgnoreCase(filterParam.trim()))) {
             List<DataSourceDto> list = allForTenant.stream()
                     .map(this::mapToDto)
                     .toList();
             return ResponseEntity.ok(list);
-        }
-
-        Set<String> allowedSet = new HashSet<>();
-        for (String raw : filterParam.split(",")) {
-            if (raw != null) {
-                String trimmed = raw.trim();
-                if (!trimmed.isEmpty()) {
-                    allowedSet.add(trimmed);
-                }
-            }
         }
 
         List<DataSourceDto> filteredList = allForTenant.stream()

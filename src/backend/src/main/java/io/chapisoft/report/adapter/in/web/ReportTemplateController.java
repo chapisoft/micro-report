@@ -71,6 +71,13 @@ public class ReportTemplateController {
         return ResponseEntity.ok(templateService.updateTemplate(tenantId, templateCode, dto));
     }
 
+    @Operation(summary = "Kích hoạt xuất bản mẫu báo cáo thành Menu riêng")
+    @PostMapping("/{templateCode}/publish")
+    public ResponseEntity<ReportTemplateDto> publishTemplate(@PathVariable String templateCode) {
+        String tenantId = TenantContext.getTenantIdOrDefault();
+        return ResponseEntity.ok(templateService.publishTemplate(tenantId, templateCode));
+    }
+
     @Operation(summary = "Xóa mềm mẫu báo cáo")
     @DeleteMapping("/{templateCode}")
     public ResponseEntity<Void> deleteTemplate(@PathVariable String templateCode) {

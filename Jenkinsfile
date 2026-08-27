@@ -132,16 +132,9 @@ pipeline {
             when { expression { env.SKIP_PIPELINE != 'true' } }
             steps {
                 script {
-                    def migrationFiles = []
-                    for (changeSet in currentBuild.changeSets) {
-                        for (entry in changeSet.items) {
-                            for (file in entry.affectedFiles) {
-                                if (file.path.contains('db/migration/') && file.path.endsWith('.sql') && fileExists(file.path)) {
-                                    migrationFiles << file.path
-                                }
-                            }
-                        }
-                    }
+                    def changedFilesRaw = sh(script: 'git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true', returnStdout: true).trim()
+                    def changedFiles = changedFilesRaw ? changedFilesRaw.split('\n').collect { it.trim() }.findAll { it } : []
+                    def migrationFiles = changedFiles.findAll { it.contains('db/migration/') && it.endsWith('.sql') && fileExists(it) }
                     if (migrationFiles.isEmpty()) {
                         echo '✅ Không có file Flyway migration nào thay đổi.'
                     } else {
@@ -223,8 +216,9 @@ pipeline {
                         # 2. Tạo thư mục persistent trên Host cho Metadata DB
                         mkdir -p /home/dip/data/report_metadata_db 2>/dev/null || true
 
-                        # 3. Đồng bộ Virtual Host Nginx lên Gateway nếu có thay đổi
+                        # 3. Luôn luôn đồng bộ Virtual Host Nginx lên Gateway
                         if [ -f "deploy/nginx/host-report-vhost.conf" ]; then
+                            echo "  📋 Cập nhật cấu hình Virtual Host Nginx..."
                             cp deploy/nginx/host-report-vhost.conf /home/dip/dip/deploy/gateway/config/conf.d/micro-report.conf 2>/dev/null || true
                         fi
 
@@ -238,23 +232,26 @@ pipeline {
                         fi
                         SERVICES_TO_RELOAD=$(echo $SERVICES_TO_RELOAD | xargs)
 
-                        # Nếu là first build hoặc deploy all -> khởi động cả metadata DB và tất cả services
-                        if [ -z "$SERVICES_TO_RELOAD" ] || [ "${TARGET_SERVICE}" = "all" ]; then
+                        if [ -n "$SERVICES_TO_RELOAD" ]; then
+                            echo "🚀 Tiến hành Rolling Update độc lập cho các dịch vụ: $SERVICES_TO_RELOAD"
+                            docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --no-deps $SERVICES_TO_RELOAD
+                        else
                             echo "🚀 Triển khai toàn bộ Stack Micro-Report (DB + Backend + Frontend)..."
                             docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --remove-orphans
-                        else
-                            echo "🚀 Tiến hành Rolling Update cho các dịch vụ: $SERVICES_TO_RELOAD"
-                            docker compose -f deploy/docker-compose.dip.yml -p micro-report up -d --build --no-deps $SERVICES_TO_RELOAD
                         fi
 
-                        # 5. Reload Nginx Gateway nếu Gateway config thay đổi
-                        if [ "${CHANGED_GATEWAY}" = "true" ]; then
-                            NGINX_ID=$(docker ps -q --filter 'name=gateway_stack_nginx')
+                        # 5. Luôn luôn Reload Nginx Gateway sau mỗi lần deploy (Bảo đảm Zero-Downtime, không bị 502)
+                        echo "🔄 Reload toàn bộ Nginx Gateway Replicas để nhận diện container mới..."
+                        NGINX_IDS=$(docker ps -q --filter 'name=gateway_stack_nginx' 2>/dev/null || true)
+                        if [ -z "$NGINX_IDS" ]; then
+                            NGINX_IDS=$(docker ps -q --filter 'name=nginx' 2>/dev/null || true)
+                        fi
+                        for NGINX_ID in $NGINX_IDS; do
                             if [ -n "$NGINX_ID" ]; then
-                                echo "🔄 Reloading Gateway Nginx..."
+                                echo "  -> Reloading Nginx container $NGINX_ID..."
                                 docker exec $NGINX_ID nginx -t && docker exec $NGINX_ID nginx -s reload || true
                             fi
-                        fi
+                        done
 
                         echo ""
                         echo "📊 Trạng thái hiện tại của toàn bộ Micro-Report Containers:"
@@ -278,11 +275,16 @@ pipeline {
 
                         check_http() {
                             local url="$1"
-                            curl -s --connect-timeout 2 --max-time 4 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            local host_header="$2"
+                            if [ -n "$host_header" ]; then
+                                curl -s --connect-timeout 2 --max-time 4 -H "Host: $host_header" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            else
+                                curl -s --connect-timeout 2 --max-time 4 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+                            fi
                         }
 
                         for i in $(seq 1 15); do
-                            # 1. Kiểm tra Backend
+                            # 1. Kiểm tra Backend (Trực tiếp container & qua Domain Nginx)
                             STATUS_BE=$(check_http "http://micro-report-backend:8080/actuator/health")
                             if [ "$STATUS_BE" != "200" ]; then
                                 STATUS_BE=$(check_http "http://172.18.0.1:8088/actuator/health")
@@ -290,14 +292,20 @@ pipeline {
                             if [ "$STATUS_BE" != "200" ]; then
                                 STATUS_BE=$(check_http "http://localhost:8088/actuator/health")
                             fi
+                            if [ "$STATUS_BE" != "200" ]; then
+                                STATUS_BE=$(check_http "http://localhost/actuator/health" "rpe.microtec.vn")
+                            fi
                             
-                            # 2. Kiểm tra Frontend
+                            # 2. Kiểm tra Frontend (Trực tiếp container & qua Domain Nginx)
                             STATUS_FE=$(check_http "http://micro-report-frontend:3000")
                             if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
                                 STATUS_FE=$(check_http "http://172.18.0.1:3008")
                             fi
                             if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
                                 STATUS_FE=$(check_http "http://localhost:3008")
+                            fi
+                            if [ "$STATUS_FE" != "200" ] && [ "$STATUS_FE" != "304" ] && [ "$STATUS_FE" != "307" ] && [ "$STATUS_FE" != "308" ]; then
+                                STATUS_FE=$(check_http "http://localhost/" "rpf.microtec.vn")
                             fi
 
                             if [ "$STATUS_BE" = "200" ] || [ "$STATUS_BE" = "302" ]; then

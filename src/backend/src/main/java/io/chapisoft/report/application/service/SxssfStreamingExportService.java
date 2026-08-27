@@ -4,12 +4,15 @@ import io.chapisoft.report.adapter.out.persistence.ExportTaskRepository;
 import io.chapisoft.report.application.dto.ExportRequest;
 import io.chapisoft.report.application.dto.ExportTaskDto;
 import io.chapisoft.report.domain.exception.ReportEngineException;
+import io.chapisoft.report.domain.exception.SecurityViolationException;
 import io.chapisoft.report.domain.export.PoiStyleFactory;
 import io.chapisoft.report.domain.model.ExportTask;
 import io.chapisoft.report.domain.model.QueryMode;
 import io.chapisoft.report.domain.model.ReportConstants;
 import io.chapisoft.report.domain.model.TaskStatus;
+import io.chapisoft.report.domain.model.TenantContext;
 import io.chapisoft.report.domain.security.BoundSql;
+import io.chapisoft.report.domain.security.DataMaskingUtils;
 import io.chapisoft.report.domain.security.DynamicParameterBinder;
 import io.chapisoft.report.domain.security.SqlSecurityAstValidator;
 
@@ -98,12 +101,22 @@ public class SxssfStreamingExportService {
         exportTaskRepository.save(task);
 
         try {
+            // 0. Kiểm tra phân quyền truy cập DataSource theo phiên (listDatasource)
+            TenantContext ctx = TenantContext.get();
+            if (ctx != null && !ctx.getAllowedDataSources().isEmpty()) {
+                if (!ctx.getAllowedDataSources().contains(request.getDatasourceCode())) {
+                    throw new SecurityViolationException("Truy cập bị từ chối: Nguồn dữ liệu '" 
+                            + request.getDatasourceCode() + "' không nằm trong danh sách được ủy quyền cho phiên làm việc này.");
+                }
+            }
+
             String rawSql = resolveSql(request);
             sqlSecurityAstValidator.validateSafeSql(rawSql);
             BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
             NamedParameterJdbcTemplate jdbcTemplate = dataSourceManager.getJdbcTemplate(tenantId, request.getDatasourceCode());
             AtomicInteger rowCount = new AtomicInteger(0);
+            boolean shouldMask = DataMaskingUtils.shouldMask(ctx);
 
             try (SXSSFWorkbook workbook = new SXSSFWorkbook(streamingWindowSize);
                  FileOutputStream fos = new FileOutputStream(targetFile)) {
@@ -165,6 +178,11 @@ public class SxssfStreamingExportService {
                         for (int i = 1; i <= colCount; i++) {
                             Cell cell = row.createCell(i - 1);
                             Object val = rs.getObject(i);
+                            String colLabel = metaData.getColumnLabel(i);
+
+                            if (shouldMask && val != null && !isNumericCol[i - 1] && !isDateCol[i - 1]) {
+                                val = DataMaskingUtils.maskValue(colLabel, val);
+                            }
 
                             if (val instanceof Number num) {
                                 cell.setCellValue(num.doubleValue());
@@ -287,12 +305,22 @@ public class SxssfStreamingExportService {
         exportTaskRepository.save(task);
 
         try {
+            // 0. Kiểm tra phân quyền truy cập DataSource theo phiên (listDatasource)
+            TenantContext ctx = TenantContext.get();
+            if (ctx != null && !ctx.getAllowedDataSources().isEmpty()) {
+                if (!ctx.getAllowedDataSources().contains(request.getDatasourceCode())) {
+                    throw new SecurityViolationException("Truy cập bị từ chối: Nguồn dữ liệu '" 
+                            + request.getDatasourceCode() + "' không nằm trong danh sách được ủy quyền cho phiên làm việc này.");
+                }
+            }
+
             String rawSql = resolveSql(request);
             sqlSecurityAstValidator.validateSafeSql(rawSql);
             BoundSql boundSql = parameterBinder.bind(rawSql, request.getParams());
 
             NamedParameterJdbcTemplate jdbcTemplate = dataSourceManager.getJdbcTemplate(tenantId, request.getDatasourceCode());
             AtomicInteger rowCount = new AtomicInteger(0);
+            boolean shouldMask = DataMaskingUtils.shouldMask(ctx);
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile, StandardCharsets.UTF_8))) {
                 // Thêm UTF-8 BOM để Excel mở CSV tiếng Việt không bị lỗi font
@@ -325,6 +353,10 @@ public class SxssfStreamingExportService {
                         for (int i = 1; i <= colCount; i++) {
                             if (i > 1) row.append(",");
                             Object val = rs.getObject(i);
+                            String colLabel = metaData.getColumnLabel(i);
+                            if (shouldMask && val != null) {
+                                val = DataMaskingUtils.maskValue(colLabel, val);
+                            }
                             row.append(escapeCsv(val != null ? val.toString() : ""));
                         }
                         row.append("\n");
