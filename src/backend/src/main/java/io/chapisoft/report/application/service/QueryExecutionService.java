@@ -18,9 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,7 +88,7 @@ public class QueryExecutionService {
         List<Map<String, Object>> rows = new ArrayList<>();
 
         try {
-            jdbcTemplate.query(limitedSql, Objects.requireNonNull(boundSql.parameterSource()), rs -> {
+            jdbcTemplate.query(Objects.requireNonNull(limitedSql), Objects.requireNonNull(boundSql.parameterSource()), rs -> {
                 ResultSetMetaData metaData = rs.getMetaData();
                 int colCount = metaData.getColumnCount();
 

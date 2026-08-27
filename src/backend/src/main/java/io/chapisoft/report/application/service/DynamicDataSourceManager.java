@@ -46,7 +46,7 @@ public class DynamicDataSourceManager {
 
     public DatabaseType getDatabaseType(String tenantId, String datasourceCode) {
         return dataSourceRepository.findByTenantAndCode(tenantId, datasourceCode)
-                .map(DataSourceConfig::getDbType)
+                .map(config -> config != null ? config.getDbType() : null)
                 .orElse(null);
     }
 
