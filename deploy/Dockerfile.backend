@@ -2,8 +2,7 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S report && adduser -S report -G report
 
-COPY src/backend/build/libs/micro-report-backend-1.0.0-SNAPSHOT.jar app.jar
-RUN chown -R report:report /app
+COPY --chown=report:report src/backend/build/libs/micro-report-backend-1.0.0-SNAPSHOT.jar app.jar
 
 USER report:report
 EXPOSE 8080
