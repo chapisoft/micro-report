@@ -151,36 +151,12 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
     return new Intl.NumberFormat("vi-VN").format(Number(val));
   };
 
-  // Fallback initial dataset tailored per report template
-  const DEFAULT_FALLBACK_ROWS: Record<string, any>[] = useMemo(() => {
-    if (templateCode === "RPT_DIP_DOSSIERS_SUMMARY") {
-      return [
-        { name: "BHXH Tự nguyện", dossier_type: "BHXH Tự nguyện", commission: 12450000000, total_revenue: 12450000000, units: 14280, total_count: 14280, provinceCode: "ALL" },
-        { name: "BHYT Hộ gia đình", dossier_type: "BHYT Hộ gia đình", commission: 18920000000, total_revenue: 18920000000, units: 18920, total_count: 18920, provinceCode: "ALL" },
-        { name: "BHYT Học sinh - Sinh viên", dossier_type: "BHYT Học sinh - Sinh viên", commission: 4310000000, total_revenue: 4310000000, units: 4310, total_count: 4310, provinceCode: "ALL" },
-        { name: "BHXH Bắt buộc (Gia hạn)", dossier_type: "BHXH Bắt buộc (Gia hạn)", commission: 5120000000, total_revenue: 5120000000, units: 5120, total_count: 5120, provinceCode: "ALL" },
-        { name: "BHYT Hộ cận nghèo", dossier_type: "BHYT Hộ cận nghèo", commission: 3280000000, total_revenue: 3280000000, units: 3280, total_count: 3280, provinceCode: "ALL" },
-      ];
-    }
-    if (templateCode === "RPT_DIP_COMMISSIONS_AGENT") {
-      return [
-        { name: "Đại lý Bưu điện Hà Nội (HAN_POST_01)", agent_user_id: "HAN_POST_01", commission: 845000000, total_commission: 845000000, units: 2840, total_txns: 2840, avg_rate: 6.8, provinceCode: "HAN" },
-        { name: "Đại lý Viettel Post TP.HCM (HCM_VTPOST_02)", agent_user_id: "HCM_VTPOST_02", commission: 1240000000, total_commission: 1240000000, units: 4120, total_txns: 4120, avg_rate: 6.5, provinceCode: "HCM" },
-        { name: "Đại lý BHYT Trung tâm Đà Nẵng (DNG_AGENCY_01)", agent_user_id: "DNG_AGENCY_01", commission: 310000000, total_commission: 310000000, units: 1050, total_txns: 1050, avg_rate: 7.2, provinceCode: "DNG" },
-        { name: "Đại lý Bưu chính Hải Phòng (HPG_POST_03)", agent_user_id: "HPG_POST_03", commission: 420000000, total_commission: 420000000, units: 1410, total_txns: 1410, avg_rate: 6.5, provinceCode: "HPG" },
-        { name: "Đại lý Bưu điện Bình Dương (BDG_POST_01)", agent_user_id: "BDG_POST_01", commission: 690000000, total_commission: 690000000, units: 2280, total_txns: 2280, avg_rate: 6.6, provinceCode: "BDG" },
-        { name: "Đại lý VNPT Cần Thơ (CTO_VNPT_01)", agent_user_id: "CTO_VNPT_01", commission: 280000000, total_commission: 280000000, units: 920, total_txns: 920, avg_rate: 6.8, provinceCode: "CTO" },
-      ];
-    }
-    return [
-      { name: "Hà Nội", provinceCode: "HAN", commission: 12450000000, units: 14280, count: 14280, dossier_type: "BHXH Tự nguyện", total_revenue: 12450000000 },
-      { name: "TP. Hồ Chí Minh", provinceCode: "HCM", commission: 18920000000, units: 18920, count: 18920, dossier_type: "BHYT Hộ gia đình", total_revenue: 18920000000 },
-      { name: "Đà Nẵng", provinceCode: "DNG", commission: 4310000000, units: 4310, count: 4310, dossier_type: "BHYT Học sinh SV", total_revenue: 4310000000 },
-      { name: "Hải Phòng", provinceCode: "HPG", commission: 5120000000, units: 5120, count: 5120, dossier_type: "BHXH Bắt buộc", total_revenue: 5120000000 },
-      { name: "Bình Dương", provinceCode: "BDG", commission: 8640000000, units: 8640, count: 8640, dossier_type: "BHYT Hộ gia đình", total_revenue: 8640000000 },
-      { name: "Cần Thơ", provinceCode: "CTO", commission: 3280000000, units: 3280, count: 3280, dossier_type: "BHXH Tự nguyện", total_revenue: 3280000000 },
-    ];
-  }, [templateCode]);
+  // Raw base rows strictly from Backend / Database query (100% Real Data, Zero Mock)
+  const rawBaseRows = useMemo(() => {
+    if (previewData?.rows && Array.isArray(previewData.rows) && previewData.rows.length > 0) return previewData.rows;
+    if (storePreviewData?.rows && Array.isArray(storePreviewData.rows) && storePreviewData.rows.length > 0) return storePreviewData.rows;
+    return [];
+  }, [previewData, storePreviewData]);
 
   // Load template details & auto-run query on mount
   useEffect(() => {
@@ -217,7 +193,7 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
         setFilterValues((prev) => ({ ...prev, ...initialVals }));
         setAppliedFilters((prev) => ({ ...prev, ...initialVals }));
 
-        // Auto execute query on mount
+        // Auto execute query on mount from real Database
         try {
           const isSql = tpl.mode === QueryMode.SQL;
           const res = await apiClient.previewQuery({
@@ -229,14 +205,16 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
             params: initialVals,
             limit: 100,
           });
-          if (res && res.rows && res.rows.length > 0) {
+          if (res && res.rows) {
             setPreviewData(res);
+          } else {
+            setPreviewData({ rows: [], columns: [], totalRows: 0, executionTimeMs: 0 });
           }
         } catch {
-          // Backend preview query optional / gracefully uses fallback
+          setPreviewData({ rows: [], columns: [], totalRows: 0, executionTimeMs: 0 });
         }
       } catch (err: any) {
-        // Fallback gracefully without blocking the view
+        setPreviewData({ rows: [], columns: [], totalRows: 0, executionTimeMs: 0 });
       } finally {
         setIsLoadingTemplate(false);
       }
@@ -271,13 +249,6 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
     if (cat === "AGENT") return t("builder.categoryAgent");
     return t("builder.categoryGeneral");
   }, [storeMetadata]);
-
-  // Raw base rows from Preview Data or rich initial dataset
-  const rawBaseRows = useMemo(() => {
-    if (previewData?.rows && previewData.rows.length > 0) return previewData.rows;
-    if (storePreviewData?.rows && storePreviewData.rows.length > 0) return storePreviewData.rows;
-    return DEFAULT_FALLBACK_ROWS;
-  }, [previewData, storePreviewData, DEFAULT_FALLBACK_ROWS]);
 
   // Normalized rows ensuring name, commission, units, provinceCode are always present
   const effectiveBaseRows = useMemo(() => {
@@ -775,68 +746,76 @@ export const StandaloneReportViewer: React.FC<StandaloneReportViewerProps> = ({
           </div>
 
           <div className="min-h-[280px] w-full flex items-center justify-center">
-            {(() => {
-              const chartConfig = {
-                chartType: activeChartType,
-                xAxisColumn: storeVisualConfig?.xAxisKey || "name",
-                yAxisColumns: storeVisualConfig?.yAxisKey ? [storeVisualConfig.yAxisKey] : ["commission"],
-                categoryColumn: storeVisualConfig?.xAxisKey || "name",
-                valueColumn: storeVisualConfig?.yAxisKey || "commission",
-                colorPalette:
-                  Array.isArray(storeVisualConfig?.colorPalette) && storeVisualConfig.colorPalette.length > 0
-                    ? storeVisualConfig.colorPalette
-                    : ["#1d4ed8", "#3b82f6", "#0ea5e9", "#10b981", "#f59e0b", "#06b6d4"],
-                showGrid: storeVisualConfig?.showGrid !== false,
-                showLegend: storeVisualConfig?.showValueLabel !== false,
-                numberFormat: storeVisualConfig?.numberFormat || "full",
-                currencyUnit: storeVisualConfig?.currencyUnit || "VNĐ",
-              };
+            {filteredRows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-slate-400 dark:text-slate-500 text-center">
+                <BarChart3 className="w-10 h-10 mb-2 stroke-[1.5] text-slate-300 dark:text-slate-600" />
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Chưa có dữ liệu trong khoảng thời gian đã chọn</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Dữ liệu được truy vấn 100% thời gian thực từ cơ sở dữ liệu</p>
+              </div>
+            ) : (
+              (() => {
+                const chartConfig = {
+                  chartType: activeChartType,
+                  xAxisColumn: storeVisualConfig?.xAxisKey || "name",
+                  yAxisColumns: storeVisualConfig?.yAxisKey ? [storeVisualConfig.yAxisKey] : ["commission"],
+                  categoryColumn: storeVisualConfig?.xAxisKey || "name",
+                  valueColumn: storeVisualConfig?.yAxisKey || "commission",
+                  colorPalette:
+                    Array.isArray(storeVisualConfig?.colorPalette) && storeVisualConfig.colorPalette.length > 0
+                      ? storeVisualConfig.colorPalette
+                      : ["#1d4ed8", "#3b82f6", "#0ea5e9", "#10b981", "#f59e0b", "#06b6d4"],
+                  showGrid: storeVisualConfig?.showGrid !== false,
+                  showLegend: storeVisualConfig?.showValueLabel !== false,
+                  numberFormat: storeVisualConfig?.numberFormat || "full",
+                  currencyUnit: storeVisualConfig?.currencyUnit || "VNĐ",
+                };
 
-              if (activeChartType === ChartType.PIE) {
+                if (activeChartType === ChartType.PIE) {
+                  return (
+                    <DynamicPieChart
+                      data={filteredRows}
+                      config={chartConfig}
+                      onPieClick={(entry) =>
+                        setActiveDetailRow({
+                          province: entry?.name || "Chi tiết",
+                          total: formatCurrency(entry?.value || 0),
+                        })
+                      }
+                    />
+                  );
+                }
+
+                if (activeChartType === ChartType.LINE) {
+                  return (
+                    <DynamicLineChart
+                      data={filteredRows}
+                      config={chartConfig}
+                    />
+                  );
+                }
+
+                if (activeChartType === ChartType.KPI) {
+                  return (
+                    <div className="w-full max-w-sm">
+                      <KpiCard data={filteredRows} config={chartConfig} />
+                    </div>
+                  );
+                }
+
                 return (
-                  <DynamicPieChart
+                  <DynamicBarChart
                     data={filteredRows}
                     config={chartConfig}
-                    onPieClick={(entry) =>
+                    onBarClick={(entry) =>
                       setActiveDetailRow({
-                        province: entry?.name || "Hà Nội",
-                        total: formatCurrency(entry?.value || 12450000000),
+                        province: entry?.name || "Chi tiết",
+                        total: formatCurrency(entry?.commission || 0),
                       })
                     }
                   />
                 );
-              }
-
-              if (activeChartType === ChartType.LINE) {
-                return (
-                  <DynamicLineChart
-                    data={filteredRows}
-                    config={chartConfig}
-                  />
-                );
-              }
-
-              if (activeChartType === ChartType.KPI) {
-                return (
-                  <div className="w-full max-w-sm">
-                    <KpiCard data={filteredRows} config={chartConfig} />
-                  </div>
-                );
-              }
-
-              return (
-                <DynamicBarChart
-                  data={filteredRows}
-                  config={chartConfig}
-                  onBarClick={(entry) =>
-                    setActiveDetailRow({
-                      province: entry?.name || "Hà Nội",
-                      total: formatCurrency(entry?.commission || 12450000000),
-                    })
-                  }
-                />
-              );
-            })()}
+              })()
+            )}
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
